@@ -7,11 +7,20 @@
 │                        Handler's Phone                          │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │              Web Browser / PWA / App                     │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │   │
-│  │  │  Microphone │  │  WebSocket  │  │  Meshtastic    │  │   │
-│  │  │   Capture   │──│   Binary    │  │  App (Backup)  │  │   │
-│  │  └─────────────┘  └──────┬──────┘  └───────┬─────────┘  │   │
-│  └──────────────────────────┼─────────────────┼────────────┘   │
+│  │                                                          │   │
+│  │  ┌─────────────┐              ┌─────────────────┐       │   │
+│  │  │  Microphone │──┐      ┌───►│    Speaker      │       │   │
+│  │  └─────────────┘  │      │    └─────────────────┘       │   │
+│  │                   ▼      │                               │   │
+│  │  ┌─────────────────────────────────────────────────┐    │   │
+│  │  │         WebSocket (Two-Way Audio)               │    │   │
+│  │  │    /ws/audio/down ──►     ◄── /ws/audio/up      │    │   │
+│  │  └──────────────────────┬──────────────────────────┘    │   │
+│  │                         │         ┌─────────────────┐   │   │
+│  │                         │         │  Meshtastic App │   │   │
+│  │                         │         │    (Backup)     │   │   │
+│  │                         │         └───────┬─────────┘   │   │
+│  └─────────────────────────┼─────────────────┼─────────────┘   │
 └─────────────────────────────┼─────────────────┼────────────────┘
                               │                 │
             Connects to Pi's  │ WiFi AP         │ LoRa
@@ -27,22 +36,24 @@
 │  ┌────────────▼─────────────┐  ┌──────────────▼──────────────┐ │
 │  │  ASP.NET Core Web Server │  │   Meshtastic                │ │
 │  │  ┌──────────────────┐    │  │   ┌─────────────┐           │ │
-│  │  │ WebSocket Audio  │    │  │   │ Msg Listener│           │ │
-│  │  └────────┬─────────┘    │  │   └──────┬──────┘           │ │
+│  │  │ WS Audio Down ▼  │    │  │   │ Msg Listener│           │ │
+│  │  │ WS Audio Up   ▲  │    │  │   └──────┬──────┘           │ │
+│  │  └────────┬─────────┘    │  │          │                  │ │
 │  └───────────┼──────────────┘  └──────────┼──────────────────┘ │
 │              │                            │                     │
 │  ┌───────────▼────────────────────────────▼──────────────────┐ │
 │  │                    Audio Manager                           │ │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │ │
-│  │  │ Stream Audio│  │    Mixer    │  │   TTS Engine    │    │ │
-│  │  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘    │ │
-│  └─────────┼────────────────┼──────────────────┼─────────────┘ │
-│            └────────────────┴──────────────────┘                │
-│                             │                                   │
-│                    ┌────────▼────────┐                         │
-│                    │  Audio Output   │                         │
-│                    │ (Speaker/DAC)   │                         │
-│                    └─────────────────┘                         │
+│  │  ┌──────────┐ ┌─────────┐ ┌───────┐ ┌─────────────────┐   │ │
+│  │  │ Playback │ │ Capture │ │ Mixer │ │   TTS Engine    │   │ │
+│  │  │ (Down)   │ │  (Up)   │ │       │ │                 │   │ │
+│  │  └────┬─────┘ └────▲────┘ └───┬───┘ └────────┬────────┘   │ │
+│  └───────┼────────────┼──────────┼──────────────┼────────────┘ │
+│          │            │          │              │               │
+│          ▼            │          ▼              │               │
+│  ┌───────────────┐    │    ┌─────────────────┐  │               │
+│  │ Audio Output  │    │    │ Audio Input     │  │               │
+│  │ (Speaker/DAC) │    └────│ (Microphone)    │◄─┘               │
+│  └───────────────┘         └─────────────────┘                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -101,6 +112,27 @@
 - PCM5102 I2S DAC (high quality, ~$5)
 - MAX98357A I2S Amp (DAC + amplifier, ~$8)
 - USB sound card (simple, ~$10)
+
+### Microphone Input Options
+
+| Method | Quality | Complexity | Notes |
+|--------|---------|------------|-------|
+| USB Sound Card | Good | Low | Combined mic in + audio out, plug and play |
+| USB Microphone | Good | Low | Dedicated mic, easy setup |
+| I2S MEMS Mic | Excellent | Medium | INMP441, SPH0645, best for integration |
+| 3.5mm + USB Adapter | Variable | Low | Use existing lavalier mic |
+
+**Recommended for DIY:**
+- USB sound card with mic input (~$10) - simplest, handles both input and output
+
+**Recommended for Commercial (Pi 5):**
+- I2S MEMS microphone (INMP441 or SPH0645) integrated on custom PCB
+- Paired with I2S DAC for full-duplex audio on single I2S bus
+
+**Microphone Placement Tips:**
+- Position near mouth but hidden (collar, mask edge, wig)
+- Use foam windscreen to reduce breath noise
+- Keep away from speaker to minimize feedback
 
 ### Power Requirements
 
@@ -168,7 +200,10 @@ Familiar-firmware/
 │   │   ├── IAudioManager.cs
 │   │   ├── AudioManager.cs
 │   │   ├── IAudioPlayer.cs
-│   │   ├── AlsaAudioPlayer.cs      # ALSA P/Invoke wrapper
+│   │   ├── AlsaAudioPlayer.cs      # ALSA playback P/Invoke
+│   │   ├── IAudioCapture.cs
+│   │   ├── AlsaAudioCapture.cs     # ALSA capture P/Invoke
+│   │   ├── VoiceActivityDetector.cs
 │   │   └── AudioBuffer.cs
 │   │
 │   ├── Familiar.Meshtastic/        # Meshtastic integration
@@ -216,11 +251,18 @@ Familiar-firmware/
 // IAudioManager.cs
 public interface IAudioManager
 {
+    // Playback (Handler → Cosplayer)
     Task PlayStreamAsync(ReadOnlyMemory<byte> audioData, CancellationToken ct = default);
     Task PlayTtsAsync(string text, int priority = 0, CancellationToken ct = default);
     void SetVolume(float level);
     float Volume { get; }
     bool IsMuted { get; set; }
+
+    // Capture (Cosplayer → Handler)
+    bool IsCapturing { get; }
+    Task StartCaptureAsync(CancellationToken ct = default);
+    Task StopCaptureAsync();
+    IAsyncEnumerable<byte[]> GetCapturedAudioAsync(CancellationToken ct = default);
 }
 
 // AudioManager.cs
@@ -264,6 +306,123 @@ public class AudioManager : IAudioManager
         var sanitized = Regex.Replace(text, @"[<>{}]", "");
         // Limit length
         return sanitized.Length > 500 ? sanitized[..500] : sanitized;
+    }
+}
+
+// IAudioCapture.cs
+public interface IAudioCapture
+{
+    bool IsCapturing { get; }
+    Task StartAsync(CancellationToken ct = default);
+    Task StopAsync();
+    IAsyncEnumerable<byte[]> ReadFramesAsync(CancellationToken ct = default);
+}
+
+// AlsaAudioCapture.cs
+public class AlsaAudioCapture : IAudioCapture, IDisposable
+{
+    private readonly AudioOptions _options;
+    private readonly ILogger<AlsaAudioCapture> _logger;
+    private readonly Channel<byte[]> _frameChannel;
+    private Process? _arecordProcess;
+
+    public AlsaAudioCapture(
+        IOptions<AudioOptions> options,
+        ILogger<AlsaAudioCapture> logger)
+    {
+        _options = options.Value;
+        _logger = logger;
+        _frameChannel = Channel.CreateBounded<byte[]>(
+            new BoundedChannelOptions(50)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest
+            });
+    }
+
+    public bool IsCapturing => _arecordProcess?.HasExited == false;
+
+    public async Task StartAsync(CancellationToken ct = default)
+    {
+        // Use arecord for ALSA capture
+        var args = $"-D {_options.InputDevice} -f S16_LE -r {_options.SampleRate} -c 1 -t raw -";
+
+        _arecordProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "arecord",
+                Arguments = args,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        _arecordProcess.Start();
+        _ = ReadCaptureStreamAsync(_arecordProcess.StandardOutput.BaseStream, ct);
+
+        _logger.LogInformation("Audio capture started on {Device}", _options.InputDevice);
+    }
+
+    private async Task ReadCaptureStreamAsync(Stream stream, CancellationToken ct)
+    {
+        var buffer = new byte[_options.BufferSize];
+
+        while (!ct.IsCancellationRequested && _arecordProcess?.HasExited == false)
+        {
+            var bytesRead = await stream.ReadAsync(buffer, ct);
+            if (bytesRead > 0)
+            {
+                var frame = buffer[..bytesRead].ToArray();
+                await _frameChannel.Writer.WriteAsync(frame, ct);
+            }
+        }
+    }
+
+    public async IAsyncEnumerable<byte[]> ReadFramesAsync(
+        [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        await foreach (var frame in _frameChannel.Reader.ReadAllAsync(ct))
+        {
+            yield return frame;
+        }
+    }
+}
+
+// VoiceActivityDetector.cs
+public class VoiceActivityDetector
+{
+    private readonly float _threshold;
+    private readonly int _holdFrames;
+    private int _silentFrames;
+
+    public VoiceActivityDetector(float threshold = 0.02f, int holdFrames = 10)
+    {
+        _threshold = threshold;
+        _holdFrames = holdFrames;
+    }
+
+    public bool IsVoiceActive(ReadOnlySpan<byte> audioFrame)
+    {
+        // Calculate RMS energy of the frame
+        float sum = 0;
+        for (int i = 0; i < audioFrame.Length - 1; i += 2)
+        {
+            short sample = (short)(audioFrame[i] | (audioFrame[i + 1] << 8));
+            float normalized = sample / 32768f;
+            sum += normalized * normalized;
+        }
+
+        float rms = MathF.Sqrt(sum / (audioFrame.Length / 2));
+
+        if (rms > _threshold)
+        {
+            _silentFrames = 0;
+            return true;
+        }
+
+        _silentFrames++;
+        return _silentFrames < _holdFrames; // Hold for a bit after voice stops
     }
 }
 ```
@@ -741,6 +900,20 @@ public class AudioWebSocketHandler
 
 ### WiFi Audio Streaming (WebSocket)
 
+### Two-Way Audio Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Handler's Phone                             │
+│                                                                  │
+│   Microphone ──► /ws/audio/down ──────────────►  Pi Speaker     │
+│   Speaker    ◄── /ws/audio/up   ◄──────────────  Pi Microphone  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Downlink: Handler → Cosplayer (`/ws/audio/down`)
+
 **Protocol:**
 ```
 Client → Server: Binary audio frames (PCM/Opus)
@@ -755,13 +928,48 @@ Audio Format:
 
 **Message Flow:**
 ```
-1. Client connects to wss://device/ws/audio
+1. Client connects to ws://192.168.4.1/ws/audio/down
 2. Client sends: {"type": "start", "codec": "pcm16", "sampleRate": 48000}
 3. Server responds: {"type": "ready"}
-4. Client sends: Binary audio frames
+4. Client sends: Binary audio frames (while PTT held)
 5. Client sends: {"type": "stop"} when done
 6. Server responds: {"type": "stopped"}
 ```
+
+### Uplink: Cosplayer → Handler (`/ws/audio/up`)
+
+**Protocol:**
+```
+Server → Client: Binary audio frames (PCM16)
+Client → Server: JSON control messages
+
+Audio Format:
+- Codec: PCM16
+- Sample Rate: 48000 Hz
+- Channels: Mono
+```
+
+**Message Flow:**
+```
+1. Client connects to ws://192.168.4.1/ws/audio/up
+2. Client sends: {"type": "subscribe"}
+3. Server responds: {"type": "subscribed", "mode": "vox"}
+4. Server sends: Binary audio frames (when voice detected or PTT active)
+5. Server sends: {"type": "vox_start"} when voice activity begins
+6. Server sends: {"type": "vox_end"} when voice activity ends
+```
+
+### Microphone Modes
+
+**VOX (Voice-Activated):**
+- Audio streams automatically when cosplayer speaks
+- Threshold-based detection with hold time
+- Best for hands-free operation
+
+**PTT (Push-to-Talk):**
+- Requires physical button press on device
+- Can use GPIO button or API call
+- Best when costume has accessible button
 
 ### Meshtastic Protocol
 
@@ -916,9 +1124,13 @@ talkBtn.addEventListener('touchend', () => client.stopTalking());
   "Familiar": {
     "Audio": {
       "OutputDevice": "default",
+      "InputDevice": "default",
       "SampleRate": 48000,
       "BufferSize": 1024,
-      "Volume": 0.8
+      "Volume": 0.8,
+      "MicMode": "vox",
+      "VoxThreshold": 0.02,
+      "VoxHoldMs": 500
     },
     "Meshtastic": {
       "Enabled": true,
@@ -960,9 +1172,13 @@ public class FamiliarOptions
 public class AudioOptions
 {
     public string OutputDevice { get; set; } = "default";
+    public string InputDevice { get; set; } = "default";
     public int SampleRate { get; set; } = 48000;
     public int BufferSize { get; set; } = 1024;
     public float Volume { get; set; } = 0.8f;
+    public string MicMode { get; set; } = "vox"; // "vox" or "ptt"
+    public float VoxThreshold { get; set; } = 0.02f;
+    public int VoxHoldMs { get; set; } = 500;
 }
 
 public class MeshtasticOptions
@@ -1420,6 +1636,10 @@ public class WebSocketTests : IClassFixture<WebApplicationFactory<Program>>
 | `/api/volume` | POST | Set volume level |
 | `/api/tts` | POST | Speak text via TTS |
 | `/api/meshtastic/nodes` | GET | List known nodes |
+| `/api/mic/status` | GET | Microphone capture status |
+| `/api/mic/start` | POST | Start voice capture |
+| `/api/mic/stop` | POST | Stop voice capture |
+| `/api/mic/mode` | POST | Set mode: "vox" (voice-activated) or "ptt" |
 
 ### Camera Endpoints (Pi 5 Only)
 
@@ -1437,7 +1657,8 @@ public class WebSocketTests : IClassFixture<WebApplicationFactory<Program>>
 
 | Endpoint | Description |
 |----------|-------------|
-| `/ws/audio` | Audio streaming |
+| `/ws/audio/down` | Audio: Handler → Cosplayer (handler sends, Pi plays) |
+| `/ws/audio/up` | Audio: Cosplayer → Handler (Pi captures, handler receives) |
 | `/ws/video` | Video streaming (Pi 5 only, H.264 frames) |
 
 ### Example API Calls
@@ -1492,6 +1713,10 @@ curl http://192.168.4.1/api/camera/recordings
 | Camera not detected | Not enabled / wrong Pi | Set `Camera.Enabled: true`, Pi 5 only |
 | Camera stream laggy | WiFi bandwidth | Reduce resolution or framerate |
 | Recording fails | Disk full / permissions | Check storage, ensure write access |
+| Mic not working | Wrong input device | Check `arecord -l`, update InputDevice |
+| VOX always transmitting | Threshold too low | Increase VoxThreshold in config |
+| VOX not triggering | Threshold too high | Decrease VoxThreshold in config |
+| Audio feedback/echo | Mic too close to speaker | Separate mic/speaker, use earpiece |
 
 ### Debug Commands
 
@@ -1499,9 +1724,15 @@ curl http://192.168.4.1/api/camera/recordings
 # Check .NET installation
 dotnet --info
 
-# Check audio devices
+# Check audio output devices
 aplay -l
+
+# Check audio input devices (microphones)
 arecord -l
+
+# Test microphone capture
+arecord -D default -f S16_LE -r 48000 -c 1 -d 5 test.wav
+aplay test.wav
 
 # Check USB devices
 lsusb

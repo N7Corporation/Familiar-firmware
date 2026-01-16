@@ -73,18 +73,27 @@
 - [ ] Select optimal solution
 - [ ] Document protocol decision
 
-### Milestone 3.2: Server-Side Audio
-- [ ] Implement WebSocket endpoint for audio
+### Milestone 3.2: Server-Side Audio (Handler → Cosplayer)
+- [ ] Implement WebSocket endpoint for receiving handler audio
 - [ ] Create audio buffer management with System.Threading.Channels
-- [ ] Integrate with ALSA via P/Invoke or native library
+- [ ] Integrate with ALSA playback via aplay/P/Invoke
 - [ ] Handle connection drops gracefully
 - [ ] Optimize for low latency
 
-### Milestone 3.3: Web Interface (Handler)
+### Milestone 3.3: Cosplayer Microphone (Cosplayer → Handler)
+- [ ] Implement ALSA audio capture via arecord
+- [ ] Create WebSocket endpoint for streaming to handler
+- [ ] Implement Voice Activity Detection (VAD)
+- [ ] Add VOX mode (voice-activated transmission)
+- [ ] Add PTT mode (GPIO button support)
+- [ ] Handle echo/feedback prevention
+
+### Milestone 3.4: Web Interface (Handler)
 - [ ] Create responsive mobile-first UI
 - [ ] Implement microphone capture with Web Audio API
-- [ ] Add push-to-talk button
-- [ ] Show connection status
+- [ ] Add push-to-talk button for handler
+- [ ] Add audio playback for cosplayer's voice
+- [ ] Show connection status and voice activity indicators
 - [ ] Add volume/settings controls
 - [ ] Bundle static files with ASP.NET Core
 
@@ -138,8 +147,9 @@
 - [ ] Add Bluetooth audio output support
 - [ ] Implement audio mixing (TTS + stream)
 - [ ] Add priority system (urgent messages)
-- [ ] Voice activity detection
-- [ ] Echo cancellation (for two-way future)
+- [ ] Improved VAD with noise floor calibration
+- [ ] Echo cancellation for full-duplex audio
+- [ ] Noise suppression on cosplayer mic
 
 ---
 

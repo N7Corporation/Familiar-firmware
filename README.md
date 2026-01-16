@@ -14,10 +14,12 @@ Familiar Firmware enables seamless one-way audio communication from a handler's 
 ## Features
 
 ### Primary Communication (WiFi)
-- Real-time audio streaming from handler's phone to cosplayer's device
+- **Two-way audio** between handler and cosplayer
+- Handler speaks into phone → cosplayer hears through earpiece
+- Cosplayer speaks into device mic → handler hears on phone
 - Web-based interface accessible from any smartphone browser
 - Low-latency audio transmission over local WiFi
-- No app installation required for the handler
+- Push-to-talk or voice-activated modes
 
 ### Backup Communication (Meshtastic)
 - LoRa-based mesh networking for extended range
@@ -37,13 +39,14 @@ Familiar Firmware enables seamless one-way audio communication from a handler's 
 - **Raspberry Pi 4** (2GB+ RAM) - minimum supported
 - LoRa radio module compatible with Meshtastic (e.g., SX1262, SX1276)
 - Speaker or audio output device (3.5mm jack, I2S DAC, or USB audio)
+- **Microphone** for cosplayer voice (USB mic, I2S MEMS mic, or USB sound card with mic input)
 - 5V 3A power supply / battery pack
 - MicroSD card (16GB+ recommended)
 
 ### Commercial Version
 - **Raspberry Pi 5** (4GB+ RAM) - better performance, lower latency
 - Integrated LoRa module
-- Custom PCB with I2S DAC + amplifier
+- Custom PCB with I2S DAC + amplifier + **MEMS microphone**
 - Optimized enclosure for costume integration
 - Battery management system
 - **Pi Camera Module 3** - live streaming & recording (Pi 5 only)
@@ -82,6 +85,12 @@ dotnet run --project src/Familiar.Host
 2. Open `http://192.168.4.1` in your browser
 3. Grant microphone permissions
 4. Press and hold the talk button to transmit audio
+5. Hear cosplayer's responses through your phone speaker
+
+### Cosplayer (Device)
+- Wears earpiece connected to the Pi
+- Speaks into integrated or attached microphone
+- Audio automatically streams to handler (voice-activated or PTT button)
 
 ### Meshtastic Backup
 1. Send a text message via Meshtastic app to the device's node
