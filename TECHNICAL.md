@@ -13,24 +13,31 @@
 │  │  └─────────────┘  └──────┬──────┘  └───────┬─────────┘  │   │
 │  └──────────────────────────┼─────────────────┼────────────┘   │
 └─────────────────────────────┼─────────────────┼────────────────┘
-                              │ WiFi            │ LoRa
+                              │                 │
+            Connects to Pi's  │ WiFi AP         │ LoRa
+            WiFi: "Familiar"  │ 192.168.4.1     │
                               │                 │
 ┌─────────────────────────────┼─────────────────┼────────────────┐
 │                     Raspberry Pi              │                 │
-│  ┌──────────────────────────▼──────┐  ┌───────▼─────────────┐  │
-│  │      ASP.NET Core Web Server    │  │   Meshtastic        │  │
-│  │  ┌──────────────────────────┐   │  │   ┌─────────────┐   │  │
-│  │  │  WebSocket Audio Handler │   │  │   │ Msg Listener│   │  │
-│  │  └────────────┬─────────────┘   │  │   └──────┬──────┘   │  │
-│  └───────────────┼─────────────────┘  └──────────┼──────────┘  │
-│                  │                               │              │
-│  ┌───────────────▼───────────────────────────────▼──────────┐  │
-│  │                    Audio Manager                          │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐   │  │
-│  │  │ Stream Audio│  │    Mixer    │  │   TTS Engine    │   │  │
-│  │  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘   │  │
-│  └─────────┼────────────────┼──────────────────┼────────────┘  │
-│            └────────────────┴──────────────────┘               │
+│  ┌──────────────────────────┐                 │                 │
+│  │  WiFi Access Point       │                 │                 │
+│  │  (hostapd + dnsmasq)     │                 │                 │
+│  └────────────┬─────────────┘                 │                 │
+│               │                               │                 │
+│  ┌────────────▼─────────────┐  ┌──────────────▼──────────────┐ │
+│  │  ASP.NET Core Web Server │  │   Meshtastic                │ │
+│  │  ┌──────────────────┐    │  │   ┌─────────────┐           │ │
+│  │  │ WebSocket Audio  │    │  │   │ Msg Listener│           │ │
+│  │  └────────┬─────────┘    │  │   └──────┬──────┘           │ │
+│  └───────────┼──────────────┘  └──────────┼──────────────────┘ │
+│              │                            │                     │
+│  ┌───────────▼────────────────────────────▼──────────────────┐ │
+│  │                    Audio Manager                           │ │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │ │
+│  │  │ Stream Audio│  │    Mixer    │  │   TTS Engine    │    │ │
+│  │  └──────┬──────┘  └──────┬──────┘  └────────┬────────┘    │ │
+│  └─────────┼────────────────┼──────────────────┼─────────────┘ │
+│            └────────────────┴──────────────────┘                │
 │                             │                                   │
 │                    ┌────────▼────────┐                         │
 │                    │  Audio Output   │                         │
@@ -43,14 +50,27 @@
 
 ### Raspberry Pi Selection
 
-| Model | Pros | Cons | Recommendation |
-|-------|------|------|----------------|
-| Pi Zero 2 W | Compact, low power, built-in WiFi | Limited processing, single USB | Best for size-constrained builds |
-| Pi 3B+ | Good balance, proven reliability | Larger form factor | Good general choice |
-| Pi 4 | Most powerful, multiple USB | Higher power consumption, heat | Best for development |
-| Pi 5 | Latest, most powerful | Highest power draw | Overkill for this use case |
+| Model | RAM | Use Case | Notes |
+|-------|-----|----------|-------|
+| **Pi 4** | 2GB+ | DIY / Minimum Spec | Recommended minimum for reliable performance |
+| **Pi 5** | 4GB+ | Commercial Version | Better CPU, lower latency, improved I/O |
 
-**Note:** .NET 8 requires 64-bit OS. Pi Zero 2 W and newer support ARM64.
+**Why Pi 4 Minimum:**
+- .NET 8 requires 64-bit ARM (ARMv8)
+- Sufficient CPU for audio processing + web server + Meshtastic
+- Built-in WiFi supports AP mode reliably
+- Multiple USB ports for LoRa module + audio
+
+**Why Pi 5 for Commercial:**
+- 2-3x faster CPU = lower audio latency
+- Improved WiFi performance
+- Better thermal management
+- PCIe support for future expansion
+- Longer support lifecycle
+
+**Not Recommended:**
+- Pi Zero 2 W: Insufficient for concurrent audio streaming + TTS
+- Pi 3B+: Limited RAM, older CPU architecture
 
 ### LoRa Module Options
 
@@ -86,15 +106,38 @@
 
 | Component | Current Draw | Notes |
 |-----------|--------------|-------|
-| Pi Zero 2 W | 100-400 mA | Idle to active |
-| Pi 4 | 500-1200 mA | Idle to active |
+| Pi 4 | 600-1200 mA | Idle to active streaming |
+| Pi 5 | 800-1500 mA | Idle to active streaming |
 | LoRa Module | 20-120 mA | Receive to transmit |
 | Audio Amp | 50-200 mA | Depends on volume |
 
 **Battery Recommendations:**
-- 5000 mAh: ~6-10 hours operation
-- 10000 mAh: ~12-20 hours operation
-- Use quality 5V/3A power bank
+
+| Battery | Pi 4 Runtime | Pi 5 Runtime |
+|---------|--------------|--------------|
+| 5000 mAh | ~4-6 hours | ~3-5 hours |
+| 10000 mAh | ~8-12 hours | ~6-10 hours |
+| 20000 mAh | ~16-24 hours | ~12-18 hours |
+
+- Use quality 5V 3A power bank (PD/QC compatible for Pi 5)
+- Pi 5 requires 5V 5A for full performance (27W USB-C PD)
+- Consider battery with passthrough charging for all-day events
+
+### Camera Options (Pi 5 Commercial Only)
+
+| Camera | Resolution | FOV | Notes |
+|--------|------------|-----|-------|
+| Pi Camera Module 3 | 12MP / 1080p60 | 66° | Standard, autofocus |
+| Pi Camera Module 3 Wide | 12MP / 1080p60 | 102° | Better for POV |
+| Pi Camera Module 3 NoIR | 12MP / 1080p60 | 66° | Low-light with IR filter removed |
+
+**Recommended: Camera Module 3 Wide** for POV recording (wider field of view captures more of what the cosplayer sees).
+
+**Why Pi 5 Only:**
+- Hardware H.264/HEVC encoding via VideoCore VII
+- Sufficient CPU for simultaneous audio + video streaming
+- New camera connector with higher bandwidth
+- Pi 4 lacks resources for reliable video + audio + web server
 
 ---
 
@@ -136,11 +179,20 @@ Familiar-firmware/
 │   │   ├── MessageHandler.cs
 │   │   └── Protobuf/               # Generated protobuf classes
 │   │
-│   └── Familiar.Tts/               # Text-to-speech
-│       ├── Familiar.Tts.csproj
-│       ├── ITtsEngine.cs
-│       ├── EspeakTtsEngine.cs
-│       └── TtsOptions.cs
+│   ├── Familiar.Tts/               # Text-to-speech
+│   │   ├── Familiar.Tts.csproj
+│   │   ├── ITtsEngine.cs
+│   │   ├── EspeakTtsEngine.cs
+│   │   └── TtsOptions.cs
+│   │
+│   └── Familiar.Camera/            # Camera streaming (Pi 5 only)
+│       ├── Familiar.Camera.csproj
+│       ├── ICameraService.cs
+│       ├── CameraService.cs
+│       ├── CameraOptions.cs
+│       └── Recording/
+│           ├── RecordingManager.cs
+│           └── VideoEncoder.cs
 │
 ├── tests/
 │   ├── Familiar.Audio.Tests/
@@ -458,7 +510,153 @@ public class EspeakTtsEngine : ITtsEngine
 }
 ```
 
-#### 5. WebSocket Audio Handler
+#### 5. Camera Service (`Familiar.Camera` - Pi 5 Only)
+
+```csharp
+// ICameraService.cs
+public interface ICameraService
+{
+    bool IsAvailable { get; }
+    bool IsStreaming { get; }
+    bool IsRecording { get; }
+
+    Task<bool> StartStreamingAsync(CancellationToken ct = default);
+    Task StopStreamingAsync();
+    Task<bool> StartRecordingAsync(string filename, CancellationToken ct = default);
+    Task<string?> StopRecordingAsync();
+    Task<byte[]?> CaptureSnapshotAsync(CancellationToken ct = default);
+
+    IAsyncEnumerable<byte[]> GetStreamFramesAsync(CancellationToken ct = default);
+}
+
+// CameraService.cs
+public class CameraService : ICameraService, IDisposable
+{
+    private readonly CameraOptions _options;
+    private readonly ILogger<CameraService> _logger;
+    private Process? _libcameraProcess;
+    private Process? _recordingProcess;
+    private readonly Channel<byte[]> _frameChannel;
+
+    public CameraService(
+        IOptions<CameraOptions> options,
+        ILogger<CameraService> logger)
+    {
+        _options = options.Value;
+        _logger = logger;
+        _frameChannel = Channel.CreateBounded<byte[]>(
+            new BoundedChannelOptions(30) // ~1 second buffer at 30fps
+            {
+                FullMode = BoundedChannelFullMode.DropOldest
+            });
+    }
+
+    public bool IsAvailable => File.Exists("/usr/bin/libcamera-vid");
+
+    public async Task<bool> StartStreamingAsync(CancellationToken ct = default)
+    {
+        if (!IsAvailable)
+        {
+            _logger.LogWarning("Camera not available - libcamera not found");
+            return false;
+        }
+
+        // Use libcamera-vid for hardware-encoded H.264 streaming
+        var args = $"-t 0 --inline --width {_options.Width} --height {_options.Height} " +
+                   $"--framerate {_options.Framerate} --codec h264 -o -";
+
+        _libcameraProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "libcamera-vid",
+                Arguments = args,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        _libcameraProcess.Start();
+        _ = ReadFramesAsync(_libcameraProcess.StandardOutput.BaseStream, ct);
+
+        _logger.LogInformation("Camera streaming started at {Width}x{Height}@{Fps}",
+            _options.Width, _options.Height, _options.Framerate);
+
+        return true;
+    }
+
+    public async Task<bool> StartRecordingAsync(string filename, CancellationToken ct = default)
+    {
+        var outputPath = Path.Combine(_options.RecordingPath, $"{filename}.mp4");
+
+        var args = $"-t 0 --width {_options.Width} --height {_options.Height} " +
+                   $"--framerate {_options.Framerate} --codec h264 -o \"{outputPath}\"";
+
+        _recordingProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "libcamera-vid",
+                Arguments = args,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        _recordingProcess.Start();
+        _logger.LogInformation("Recording started: {Path}", outputPath);
+
+        return true;
+    }
+
+    public async Task<byte[]?> CaptureSnapshotAsync(CancellationToken ct = default)
+    {
+        var tempFile = Path.GetTempFileName() + ".jpg";
+
+        try
+        {
+            var args = $"--width {_options.Width} --height {_options.Height} -o \"{tempFile}\"";
+
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "libcamera-jpeg",
+                Arguments = args,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
+            await process!.WaitForExitAsync(ct);
+
+            if (process.ExitCode == 0 && File.Exists(tempFile))
+            {
+                return await File.ReadAllBytesAsync(tempFile, ct);
+            }
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+
+        return null;
+    }
+}
+
+// CameraOptions.cs
+public class CameraOptions
+{
+    public bool Enabled { get; set; } = false;
+    public int Width { get; set; } = 1920;
+    public int Height { get; set; } = 1080;
+    public int Framerate { get; set; } = 30;
+    public string RecordingPath { get; set; } = "/home/familiar/recordings";
+    public int StreamBitrate { get; set; } = 4_000_000; // 4 Mbps
+    public int RecordingBitrate { get; set; } = 8_000_000; // 8 Mbps
+}
+```
+
+#### 6. WebSocket Audio Handler
 
 ```csharp
 // WebSockets/AudioWebSocketHandler.cs
@@ -734,6 +932,15 @@ talkBtn.addEventListener('touchend', () => client.stopTalking());
       "Engine": "espeak",
       "Voice": "en",
       "Rate": 150
+    },
+    "Camera": {
+      "Enabled": false,
+      "Width": 1920,
+      "Height": 1080,
+      "Framerate": 30,
+      "RecordingPath": "/home/familiar/recordings",
+      "StreamBitrate": 4000000,
+      "RecordingBitrate": 8000000
     }
   }
 }
@@ -778,6 +985,136 @@ public class TtsOptions
 
 ---
 
+## WiFi Access Point Configuration
+
+The Pi hosts its own WiFi network so handlers can connect directly without relying on venue WiFi.
+
+### Network Architecture
+
+```
+┌─────────────────┐         ┌─────────────────────────────────┐
+│ Handler's Phone │  WiFi   │         Raspberry Pi            │
+│                 │◄───────►│                                 │
+│  192.168.4.x    │         │  192.168.4.1 (AP)               │
+└─────────────────┘         │                                 │
+                            │  hostapd  ──► wlan0 (AP mode)   │
+                            │  dnsmasq  ──► DHCP server       │
+                            │  Familiar ──► Web server :80    │
+                            └─────────────────────────────────┘
+```
+
+### hostapd Configuration
+
+```ini
+# /etc/hostapd/hostapd.conf
+interface=wlan0
+driver=nl80211
+ssid=Familiar
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=YourSecurePassword
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+```
+
+Enable hostapd:
+```bash
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+```
+
+### dnsmasq Configuration
+
+```ini
+# /etc/dnsmasq.conf
+interface=wlan0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+domain=local
+address=/familiar.local/192.168.4.1
+```
+
+### Static IP Configuration
+
+```ini
+# /etc/dhcpcd.conf (append)
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+```
+
+### AP Setup Script
+
+```bash
+#!/bin/bash
+# scripts/setup-ap.sh
+
+set -e
+
+echo "Installing AP packages..."
+sudo apt-get update
+sudo apt-get install -y hostapd dnsmasq
+
+echo "Stopping services during config..."
+sudo systemctl stop hostapd
+sudo systemctl stop dnsmasq
+
+echo "Configuring static IP..."
+sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
+
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+EOF
+
+echo "Configuring hostapd..."
+sudo tee /etc/hostapd/hostapd.conf > /dev/null <<EOF
+interface=wlan0
+driver=nl80211
+ssid=Familiar
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=ChangeMeNow123
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+
+echo "Pointing to hostapd config..."
+sudo sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
+
+echo "Configuring dnsmasq..."
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo tee /etc/dnsmasq.conf > /dev/null <<EOF
+interface=wlan0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+domain=local
+address=/familiar.local/192.168.4.1
+EOF
+
+echo "Enabling services..."
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl enable dnsmasq
+
+echo "AP setup complete! Reboot to activate."
+echo "SSID: Familiar"
+echo "Password: ChangeMeNow123 (change this in /etc/hostapd/hostapd.conf)"
+echo "Web UI: http://192.168.4.1"
+```
+
+---
+
 ## Deployment
 
 ### systemd Service
@@ -810,29 +1147,99 @@ WantedBy=multi-user.target
 
 set -e
 
-echo "Installing .NET 8 Runtime..."
-curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --runtime aspnetcore
+echo "========================================="
+echo "Familiar Firmware Setup"
+echo "========================================="
 
-echo "Installing dependencies..."
+# Install system dependencies
+echo "[1/6] Installing system dependencies..."
 sudo apt-get update
-sudo apt-get install -y espeak alsa-utils
+sudo apt-get install -y espeak alsa-utils hostapd dnsmasq
 
-echo "Building application..."
+# Install .NET 8 Runtime
+echo "[2/6] Installing .NET 8 Runtime..."
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --runtime aspnetcore
+export PATH="$HOME/.dotnet:$PATH"
+
+# Configure WiFi Access Point
+echo "[3/6] Configuring WiFi Access Point..."
+sudo systemctl stop hostapd 2>/dev/null || true
+sudo systemctl stop dnsmasq 2>/dev/null || true
+
+# Static IP for wlan0
+if ! grep -q "interface wlan0" /etc/dhcpcd.conf; then
+    sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
+
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+EOF
+fi
+
+# hostapd config
+sudo tee /etc/hostapd/hostapd.conf > /dev/null <<EOF
+interface=wlan0
+driver=nl80211
+ssid=Familiar
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=FamiliarDevice
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+
+sudo sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
+
+# dnsmasq config
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig 2>/dev/null || true
+sudo tee /etc/dnsmasq.conf > /dev/null <<EOF
+interface=wlan0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+domain=local
+address=/familiar.local/192.168.4.1
+EOF
+
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl enable dnsmasq
+
+# Build application
+echo "[4/6] Building Familiar application..."
 dotnet publish src/Familiar.Host -c Release -o /opt/familiar
 
-echo "Creating service user..."
-sudo useradd -r -s /bin/false familiar || true
-
-echo "Setting permissions..."
+# Create service user
+echo "[5/6] Creating service user..."
+sudo useradd -r -s /bin/false familiar 2>/dev/null || true
 sudo chown -R familiar:familiar /opt/familiar
 sudo usermod -a -G audio,dialout familiar
 
-echo "Installing systemd service..."
+# Install systemd service
+echo "[6/6] Installing systemd service..."
 sudo cp scripts/familiar.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable familiar
 
-echo "Setup complete! Start with: sudo systemctl start familiar"
+echo ""
+echo "========================================="
+echo "Setup complete!"
+echo "========================================="
+echo ""
+echo "WiFi Network:"
+echo "  SSID:     Familiar"
+echo "  Password: FamiliarDevice"
+echo "  Web UI:   http://192.168.4.1"
+echo ""
+echo "Next steps:"
+echo "  1. sudo reboot"
+echo "  2. Connect phone to 'Familiar' WiFi"
+echo "  3. Open http://192.168.4.1"
+echo ""
 ```
 
 ---
@@ -1014,27 +1421,58 @@ public class WebSocketTests : IClassFixture<WebApplicationFactory<Program>>
 | `/api/tts` | POST | Speak text via TTS |
 | `/api/meshtastic/nodes` | GET | List known nodes |
 
+### Camera Endpoints (Pi 5 Only)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/camera/status` | GET | Camera availability and state |
+| `/api/camera/snapshot` | GET | Capture and return JPEG image |
+| `/api/camera/recording/start` | POST | Start recording to file |
+| `/api/camera/recording/stop` | POST | Stop recording, return filename |
+| `/api/camera/recordings` | GET | List saved recordings |
+| `/api/camera/recordings/{id}` | GET | Download recording file |
+| `/api/camera/recordings/{id}` | DELETE | Delete recording |
+
 ### WebSocket Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
 | `/ws/audio` | Audio streaming |
+| `/ws/video` | Video streaming (Pi 5 only, H.264 frames) |
 
 ### Example API Calls
 
 ```bash
 # Get status
-curl https://familiar.local/api/status
+curl http://192.168.4.1/api/status
 
 # Set volume
-curl -X POST https://familiar.local/api/volume \
+curl -X POST http://192.168.4.1/api/volume \
   -H "Content-Type: application/json" \
   -d '{"level": 0.75}'
 
 # Send TTS message
-curl -X POST https://familiar.local/api/tts \
+curl -X POST http://192.168.4.1/api/tts \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello from the API"}'
+
+# Camera (Pi 5 only)
+# Get camera status
+curl http://192.168.4.1/api/camera/status
+
+# Capture snapshot
+curl http://192.168.4.1/api/camera/snapshot --output snapshot.jpg
+
+# Start recording
+curl -X POST http://192.168.4.1/api/camera/recording/start \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "con-day1-panel"}'
+
+# Stop recording
+curl -X POST http://192.168.4.1/api/camera/recording/stop
+
+# List recordings
+curl http://192.168.4.1/api/camera/recordings
 ```
 
 ---
@@ -1051,6 +1489,9 @@ curl -X POST https://familiar.local/api/tts \
 | TTS not working | espeak not installed | `sudo apt install espeak` |
 | Web interface not loading | HTTPS certificate issue | Regenerate certificates |
 | .NET not starting | Wrong architecture | Ensure 64-bit OS on Pi |
+| Camera not detected | Not enabled / wrong Pi | Set `Camera.Enabled: true`, Pi 5 only |
+| Camera stream laggy | WiFi bandwidth | Reduce resolution or framerate |
+| Recording fails | Disk full / permissions | Check storage, ensure write access |
 
 ### Debug Commands
 
@@ -1076,4 +1517,11 @@ sudo journalctl -u familiar -f
 
 # Test TTS
 espeak "Testing one two three"
+
+# Check camera (Pi 5 only)
+libcamera-hello --list-cameras
+libcamera-jpeg -o test.jpg
+
+# Test camera streaming
+libcamera-vid -t 10000 --width 1920 --height 1080 -o test.h264
 ```

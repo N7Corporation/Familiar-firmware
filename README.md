@@ -25,22 +25,38 @@ Familiar Firmware enables seamless one-way audio communication from a handler's 
 - Works when WiFi is unavailable or out of range
 - Integrates with existing Meshtastic network/devices
 
+### Camera Features (Pi 5 Commercial Only)
+- Live video streaming to handler's phone
+- POV recording for content creation
+- Snapshot capture on demand
+- Handler can see what the cosplayer sees
+
 ## Hardware Requirements
 
-- Raspberry Pi (3B+, 4, or Zero 2 W recommended)
+### DIY Version (Minimum Spec)
+- **Raspberry Pi 4** (2GB+ RAM) - minimum supported
 - LoRa radio module compatible with Meshtastic (e.g., SX1262, SX1276)
-- Speaker or audio output device (3.5mm jack, I2S DAC, or Bluetooth)
-- Power supply (battery pack for portability)
+- Speaker or audio output device (3.5mm jack, I2S DAC, or USB audio)
+- 5V 3A power supply / battery pack
 - MicroSD card (16GB+ recommended)
-- Optional: Enclosure for costume integration
+
+### Commercial Version
+- **Raspberry Pi 5** (4GB+ RAM) - better performance, lower latency
+- Integrated LoRa module
+- Custom PCB with I2S DAC + amplifier
+- Optimized enclosure for costume integration
+- Battery management system
+- **Pi Camera Module 3** - live streaming & recording (Pi 5 only)
 
 ## Software Requirements
 
 - Raspberry Pi OS (64-bit recommended)
 - .NET 8.0 Runtime
 - ASP.NET Core
-- Meshtastic serial communication libraries
+- hostapd (WiFi access point)
+- dnsmasq (DHCP server)
 - ALSA audio libraries
+- espeak (text-to-speech)
 
 ## Quick Start
 
@@ -62,8 +78,8 @@ dotnet run --project src/Familiar.Host
 ## Usage
 
 ### Handler (Phone)
-1. Connect to the Familiar WiFi network or same local network
-2. Open the web interface in your browser
+1. Connect to the **Familiar** WiFi network (hosted by the Pi)
+2. Open `http://192.168.4.1` in your browser
 3. Grant microphone permissions
 4. Press and hold the talk button to transmit audio
 
@@ -95,11 +111,6 @@ Edit `config/appsettings.json` to customize:
 ```json
 {
   "Familiar": {
-    "WiFi": {
-      "ApMode": true,
-      "Ssid": "Familiar-AP",
-      "Password": "your-password"
-    },
     "Audio": {
       "OutputDevice": "default",
       "SampleRate": 48000,

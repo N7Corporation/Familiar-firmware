@@ -12,9 +12,9 @@
 
 ### Milestone 1.2: Base System Setup
 - [ ] Install Raspberry Pi OS (64-bit)
-- [ ] Configure WiFi (both client and AP modes)
+- [ ] Configure WiFi Access Point (hostapd + dnsmasq)
 - [ ] Install .NET 8.0 Runtime
-- [ ] Install ALSA audio libraries
+- [ ] Install ALSA audio libraries and espeak
 - [ ] Test audio output (speakers/3.5mm/I2S)
 - [ ] Create basic startup scripts
 
@@ -143,22 +143,22 @@
 
 ---
 
-## Phase 6: Hardware Integration
-**Goal**: Costume-ready device
+## Phase 6: Hardware Integration (DIY - Pi 4)
+**Goal**: Costume-ready DIY device
 
 ### Milestone 6.1: Form Factor
-- [ ] Design compact enclosure
+- [ ] Design compact enclosure for Pi 4
 - [ ] Create 3D printable case
 - [ ] Optimize for battery operation
 - [ ] Add status LEDs (GPIO control)
-- [ ] Document assembly
+- [ ] Document assembly with off-the-shelf parts
 
 ### Milestone 6.2: Power Management
-- [ ] Measure power consumption
+- [ ] Measure power consumption (Pi 4 baseline)
 - [ ] Implement power saving modes
-- [ ] Add battery monitoring
-- [ ] Low battery warnings
-- [ ] Optimize for full-day operation
+- [ ] Add battery monitoring via ADC
+- [ ] Low battery warnings (audio + LED)
+- [ ] Target 8+ hours on 10000mAh
 
 ### Milestone 6.3: Costume Integration Guide
 - [ ] Document hiding techniques
@@ -166,6 +166,51 @@
 - [ ] Wiring best practices
 - [ ] Heat management
 - [ ] Quick-disconnect options
+
+---
+
+## Phase 7: Commercial Version (Pi 5)
+**Goal**: Production-ready commercial hardware
+
+### Milestone 7.1: Pi 5 Optimization
+- [ ] Test and optimize for Pi 5 performance
+- [ ] Leverage improved CPU for lower latency
+- [ ] Utilize Pi 5 power management features
+- [ ] Test with 27W USB-C PD power delivery
+- [ ] Enable hardware video encoding (H.264/HEVC)
+
+### Milestone 7.2: Custom PCB Design
+- [ ] Design carrier board for Pi 5 CM (Compute Module) or full Pi 5
+- [ ] Integrate I2S DAC + Class D amplifier
+- [ ] Integrate LoRa module (SX1262)
+- [ ] Add battery charging circuit (BMS)
+- [ ] Add fuel gauge IC for accurate battery %
+- [ ] Status LEDs and tactile buttons
+
+### Milestone 7.3: Pi Camera Integration
+- [ ] Integrate Pi Camera Module 3 support
+- [ ] Implement live video streaming (WebRTC/HLS)
+- [ ] Add recording to local storage (H.264/HEVC)
+- [ ] Snapshot capture API endpoint
+- [ ] Picture-in-picture view in handler web UI
+- [ ] Camera settings (resolution, framerate, exposure)
+- [ ] Optional: Wide-angle or fisheye lens support
+
+### Milestone 7.4: Commercial Enclosure
+- [ ] Design injection-moldable enclosure
+- [ ] Optimize thermal design for Pi 5
+- [ ] IP rating for sweat/light moisture resistance
+- [ ] Belt clip and lanyard attachment points
+- [ ] Speaker grille and microphone port
+- [ ] Camera lens window/port
+- [ ] Flexible camera cable routing
+
+### Milestone 7.5: Manufacturing Prep
+- [ ] BOM optimization for cost
+- [ ] Assembly documentation
+- [ ] QA test procedures
+- [ ] FCC/CE certification considerations
+- [ ] Packaging design
 
 ---
 
@@ -180,9 +225,8 @@
 - Multiple language TTS support
 
 ### Hardware Variants
-- ESP32-based lightweight version
-- Raspberry Pi Pico W option
-- Commercial off-the-shelf integration
+- **DIY Kit**: Pi 4 + off-the-shelf components
+- **Commercial Unit**: Pi 5 + custom PCB + integrated enclosure
 
 ### .NET Ecosystem Opportunities
 - Blazor WebAssembly for richer web UI
@@ -194,12 +238,13 @@
 
 ## Version Milestones
 
-| Version | Status | Description |
-|---------|--------|-------------|
-| 0.1.0 | Planned | Basic TTS via Meshtastic |
-| 0.2.0 | Planned | Web interface foundation |
-| 0.3.0 | Planned | Audio streaming MVP |
-| 0.4.0 | Planned | Reliability improvements |
-| 1.0.0 | Planned | Production-ready release |
-| 1.1.0 | Planned | Mobile app release |
-| 2.0.0 | Future | Multi-device support |
+| Version | Status | Target Hardware | Description |
+|---------|--------|-----------------|-------------|
+| 0.1.0 | Planned | Pi 4 | Basic TTS via Meshtastic |
+| 0.2.0 | Planned | Pi 4 | Web interface foundation |
+| 0.3.0 | Planned | Pi 4 | Audio streaming MVP |
+| 0.4.0 | Planned | Pi 4 | Reliability improvements |
+| 1.0.0 | Planned | Pi 4 | DIY release - fully functional |
+| 1.1.0 | Planned | Pi 4 | Mobile app (optional) |
+| 2.0.0 | Planned | Pi 4 / Pi 5 | Multi-device support |
+| 3.0.0 | Future | Pi 5 | Commercial hardware release |
