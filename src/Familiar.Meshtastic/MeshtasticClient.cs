@@ -246,7 +246,14 @@ public class MeshtasticClient : IMeshtasticClient
         if (_disposed) return;
         _disposed = true;
 
-        DisconnectAsync().GetAwaiter().GetResult();
+        try
+        {
+            DisconnectAsync().GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // Ignore errors during disposal
+        }
         GC.SuppressFinalize(this);
     }
 }

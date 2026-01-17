@@ -59,25 +59,40 @@ public class MeshtasticService : BackgroundService
                 // Wait and check connection periodically
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
+                // Normal shutdown
                 break;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Meshtastic connection error, retrying in {Delay}s",
+                _logger.LogWarning(ex, "Meshtastic connection error, retrying in {Delay}s",
                     _options.ReconnectDelaySeconds);
 
-                await Task.Delay(
-                    TimeSpan.FromSeconds(_options.ReconnectDelaySeconds),
-                    stoppingToken);
+                try
+                {
+                    await Task.Delay(
+                        TimeSpan.FromSeconds(_options.ReconnectDelaySeconds),
+                        stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
 
         _client.MessageReceived -= OnMessageReceived;
         _client.ConnectionStateChanged -= OnConnectionStateChanged;
 
-        await _client.DisconnectAsync();
+        try
+        {
+            await _client.DisconnectAsync();
+        }
+        catch
+        {
+            // Ignore disconnect errors during shutdown
+        }
     }
 
     private async void OnMessageReceived(object? sender, MessageReceivedEventArgs e)
