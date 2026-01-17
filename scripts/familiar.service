@@ -1,0 +1,35 @@
+[Unit]
+Description=Familiar Firmware Service
+After=network.target sound.target
+
+[Service]
+Type=notify
+User=familiar
+Group=familiar
+WorkingDirectory=/opt/familiar
+ExecStart=/usr/bin/dotnet /opt/familiar/Familiar.Host.dll
+Restart=always
+RestartSec=10
+
+# Environment
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/familiar/recordings /var/log/familiar
+
+# Allow audio and video device access
+SupplementaryGroups=audio video
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=familiar
+
+[Install]
+WantedBy=multi-user.target

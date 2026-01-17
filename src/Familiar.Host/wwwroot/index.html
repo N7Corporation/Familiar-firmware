@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Familiar - Handler Console</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Familiar</h1>
+            <div id="connection-status" class="status disconnected">Disconnected</div>
+        </header>
+
+        <main>
+            <!-- Audio Controls -->
+            <section class="panel">
+                <h2>Audio</h2>
+                <div class="controls">
+                    <button id="ptt-btn" class="ptt-button" disabled>
+                        <span class="ptt-icon">🎤</span>
+                        <span class="ptt-text">Push to Talk</span>
+                    </button>
+                    <div class="audio-indicators">
+                        <div class="indicator">
+                            <span class="label">Uplink</span>
+                            <div id="uplink-meter" class="meter"></div>
+                        </div>
+                        <div class="indicator">
+                            <span class="label">Downlink</span>
+                            <div id="downlink-meter" class="meter"></div>
+                        </div>
+                    </div>
+                    <div class="volume-control">
+                        <label for="volume">Volume</label>
+                        <input type="range" id="volume" min="0" max="100" value="80">
+                        <span id="volume-value">80%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Stream (Pi 5 only) -->
+            <section class="panel" id="video-panel">
+                <h2>Video Stream</h2>
+                <div class="video-container">
+                    <canvas id="video-canvas"></canvas>
+                    <div class="video-controls">
+                        <button id="video-subscribe">Start Stream</button>
+                        <button id="video-snapshot">Snapshot</button>
+                        <button id="video-record" class="record-btn">Record</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Text to Speech -->
+            <section class="panel">
+                <h2>Text to Speech</h2>
+                <div class="tts-controls">
+                    <textarea id="tts-text" placeholder="Enter message for cosplayer..."></textarea>
+                    <div class="tts-buttons">
+                        <button id="tts-speak">Speak</button>
+                        <button id="tts-meshtastic">Send via Meshtastic</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Messages -->
+            <section class="panel">
+                <h2>Quick Messages</h2>
+                <div class="quick-messages" id="quick-messages">
+                    <button data-msg="Photo time, hold your pose">Photo pose</button>
+                    <button data-msg="Someone approaching on your left">Left side</button>
+                    <button data-msg="Someone approaching on your right">Right side</button>
+                    <button data-msg="Take a break when you can">Break time</button>
+                    <button data-msg="Need you at the booth">Come back</button>
+                    <button data-msg="Looking great, keep it up">Encouragement</button>
+                </div>
+            </section>
+
+            <!-- Meshtastic Status -->
+            <section class="panel">
+                <h2>Meshtastic</h2>
+                <div id="meshtastic-status">
+                    <div class="status-row">
+                        <span>Connection:</span>
+                        <span id="mesh-connected">Unknown</span>
+                    </div>
+                    <div class="status-row">
+                        <span>Nodes:</span>
+                        <span id="mesh-nodes">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Status -->
+            <section class="panel">
+                <h2>System</h2>
+                <div id="system-status">
+                    <div class="status-row">
+                        <span>Uptime:</span>
+                        <span id="sys-uptime">--</span>
+                    </div>
+                    <div class="status-row">
+                        <span>Camera:</span>
+                        <span id="sys-camera">--</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Familiar.Host</RootNamespace>
+    <Description>Main host application for Familiar Firmware</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Familiar.Audio\Familiar.Audio.csproj" />
+    <ProjectReference Include="..\Familiar.Tts\Familiar.Tts.csproj" />
+    <ProjectReference Include="..\Familiar.Meshtastic\Familiar.Meshtastic.csproj" />
+    <ProjectReference Include="..\Familiar.Camera\Familiar.Camera.csproj" />
+  </ItemGroup>
+
+</Project>
