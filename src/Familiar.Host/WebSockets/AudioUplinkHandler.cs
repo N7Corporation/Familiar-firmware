@@ -33,6 +33,9 @@ public class AudioUplinkHandler
         _logger.LogInformation("Audio uplink connected from {IP}",
             context.Connection.RemoteIpAddress);
 
+        // Handler for voice activity changes
+        EventHandler<VoiceActivityEventArgs>? voiceActivityHandler = null;
+
         try
         {
             while (ws.State == WebSocketState.Open)
@@ -47,11 +50,42 @@ public class AudioUplinkHandler
                     if (response == "subscribe" && !subscribed)
                     {
                         subscribed = true;
+
+                        // Subscribe to voice activity changes
+                        voiceActivityHandler = async (sender, e) =>
+                        {
+                            if (ws.State == WebSocketState.Open)
+                            {
+                                try
+                                {
+                                    await SendJsonAsync(ws, new
+                                    {
+                                        type = "speaking",
+                                        active = e.IsActive,
+                                        timestamp = e.Timestamp.ToString("o")
+                                    }, CancellationToken.None);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogDebug(ex, "Failed to send speaking state");
+                                }
+                            }
+                        };
+                        _audioManager.VoiceActivityChanged += voiceActivityHandler;
+
                         // Start capture if not already capturing
                         if (!_audioManager.IsCapturing)
                         {
                             await _audioManager.StartCaptureAsync(context.RequestAborted);
                         }
+
+                        // Send initial speaking state
+                        await SendJsonAsync(ws, new
+                        {
+                            type = "speaking",
+                            active = _audioManager.IsVoiceActive,
+                            timestamp = DateTime.UtcNow.ToString("o")
+                        }, context.RequestAborted);
 
                         // Start streaming audio to this WebSocket
                         var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
@@ -61,6 +95,11 @@ public class AudioUplinkHandler
                     else if (response == "unsubscribe" && subscribed)
                     {
                         subscribed = false;
+                        if (voiceActivityHandler != null)
+                        {
+                            _audioManager.VoiceActivityChanged -= voiceActivityHandler;
+                            voiceActivityHandler = null;
+                        }
                         streamCts.Cancel();
                     }
                 }
@@ -80,6 +119,12 @@ public class AudioUplinkHandler
         }
         finally
         {
+            // Unsubscribe from voice activity changes
+            if (voiceActivityHandler != null)
+            {
+                _audioManager.VoiceActivityChanged -= voiceActivityHandler;
+            }
+
             streamCts.Cancel();
             if (streamTask != null)
             {
@@ -137,8 +182,6 @@ public class AudioUplinkHandler
 
     private async Task StreamAudioAsync(WebSocket ws, CancellationToken ct)
     {
-        bool wasVoiceActive = false;
-
         try
         {
             await foreach (var frame in _audioManager.GetCapturedAudioAsync(ct))
@@ -146,11 +189,7 @@ public class AudioUplinkHandler
                 if (ws.State != WebSocketState.Open)
                     break;
 
-                // Send VOX state changes
-                // Note: This is a simplified implementation
-                // Real implementation would track VAD state separately
-
-                // Send audio frame
+                // Send audio frame (speaking state is sent via VoiceActivityChanged event)
                 await ws.SendAsync(frame, WebSocketMessageType.Binary, true, ct);
             }
         }

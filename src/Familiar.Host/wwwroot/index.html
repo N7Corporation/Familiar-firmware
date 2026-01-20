@@ -18,17 +18,23 @@
             <section class="panel">
                 <h2>Audio</h2>
                 <div class="controls">
+                    <!-- Cosplayer Speaking Indicator -->
+                    <div id="cosplayer-speaking" class="speaking-indicator">
+                        <span class="speaking-icon">🎭</span>
+                        <span class="speaking-text">Cosplayer Silent</span>
+                    </div>
+
                     <button id="ptt-btn" class="ptt-button" disabled>
                         <span class="ptt-icon">🎤</span>
                         <span class="ptt-text">Push to Talk</span>
                     </button>
                     <div class="audio-indicators">
                         <div class="indicator">
-                            <span class="label">Uplink</span>
+                            <span class="label">Uplink (Cosplayer)</span>
                             <div id="uplink-meter" class="meter"></div>
                         </div>
                         <div class="indicator">
-                            <span class="label">Downlink</span>
+                            <span class="label">Downlink (You)</span>
                             <div id="downlink-meter" class="meter"></div>
                         </div>
                     </div>

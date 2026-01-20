@@ -1,11 +1,40 @@
 namespace Familiar.Audio;
 
 /// <summary>
+/// Event arguments for voice activity state changes.
+/// </summary>
+public class VoiceActivityEventArgs : EventArgs
+{
+    public bool IsActive { get; }
+    public DateTime Timestamp { get; }
+
+    public VoiceActivityEventArgs(bool isActive)
+    {
+        IsActive = isActive;
+        Timestamp = DateTime.UtcNow;
+    }
+}
+
+/// <summary>
 /// Central interface for managing all audio operations.
 /// Handles both playback (handler → cosplayer) and capture (cosplayer → handler).
 /// </summary>
 public interface IAudioManager : IDisposable
 {
+    #region Voice Activity Detection
+
+    /// <summary>
+    /// Event raised when voice activity state changes (speaking started/stopped).
+    /// </summary>
+    event EventHandler<VoiceActivityEventArgs>? VoiceActivityChanged;
+
+    /// <summary>
+    /// Gets whether voice is currently detected (VOX mode) or PTT is active.
+    /// </summary>
+    bool IsVoiceActive { get; }
+
+    #endregion
+
     #region Playback (Handler → Cosplayer)
 
     /// <summary>

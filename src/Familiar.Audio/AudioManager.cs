@@ -24,9 +24,20 @@ public class AudioManager : IAudioManager
     private bool _disposed;
     private Task? _vadTask;
     private CancellationTokenSource? _vadCts;
+    private bool _isVoiceActive;
 
     // TTS callback - set by the host to integrate with TTS engine
     private Func<string, CancellationToken, Task<byte[]>>? _ttsCallback;
+
+    /// <summary>
+    /// Event raised when voice activity state changes.
+    /// </summary>
+    public event EventHandler<VoiceActivityEventArgs>? VoiceActivityChanged;
+
+    /// <summary>
+    /// Gets whether voice is currently active (speaking).
+    /// </summary>
+    public bool IsVoiceActive => _isVoiceActive;
 
     public AudioManager(
         IAudioPlayer player,
@@ -205,6 +216,27 @@ public class AudioManager : IAudioManager
                     _ => false
                 };
 
+                // Check for voice activity state change
+                if (shouldTransmit != _isVoiceActive)
+                {
+                    _isVoiceActive = shouldTransmit;
+                    _logger.LogDebug("Voice activity changed: {Active}", _isVoiceActive);
+
+                    // Fire event on thread pool to avoid blocking audio processing
+                    var args = new VoiceActivityEventArgs(_isVoiceActive);
+                    ThreadPool.QueueUserWorkItem(_ =>
+                    {
+                        try
+                        {
+                            VoiceActivityChanged?.Invoke(this, args);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error in VoiceActivityChanged handler");
+                        }
+                    });
+                }
+
                 if (shouldTransmit)
                 {
                     await _captureOutputChannel.Writer.WriteAsync(frame, ct);
@@ -218,6 +250,15 @@ public class AudioManager : IAudioManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing captured audio");
+        }
+        finally
+        {
+            // Ensure we signal voice stopped when capture ends
+            if (_isVoiceActive)
+            {
+                _isVoiceActive = false;
+                VoiceActivityChanged?.Invoke(this, new VoiceActivityEventArgs(false));
+            }
         }
     }
 
