@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/N7Corporation/Familiar-firmware/blob/main/TECHNICAL.md
+    about: Check the technical documentation before opening an issue
+  - name: Roadmap
+    url: https://github.com/N7Corporation/Familiar-firmware/blob/main/ROADMAP.md
+    about: View the project roadmap and planned features
