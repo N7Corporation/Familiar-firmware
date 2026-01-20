@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Familiar.Tts\Familiar.Tts.csproj" />
+    <ProjectReference Include="..\..\src\Familiar.Camera\Familiar.Camera.csproj" />
   </ItemGroup>
 
 </Project>
