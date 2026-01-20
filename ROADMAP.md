@@ -30,36 +30,36 @@
 **Goal**: Implement primary functionality with .NET
 
 ### Milestone 2.1: Project Setup
-- [ ] Create .NET 8 solution structure
-- [ ] Set up Familiar.Host project (ASP.NET Core)
-- [ ] Set up Familiar.Audio class library
-- [ ] Set up Familiar.Meshtastic class library
-- [ ] Set up Familiar.Tts class library
-- [ ] Configure dependency injection
+- [x] Create .NET 8 solution structure
+- [x] Set up Familiar.Host project (ASP.NET Core)
+- [x] Set up Familiar.Audio class library
+- [x] Set up Familiar.Meshtastic class library
+- [x] Set up Familiar.Tts class library
+- [x] Configure dependency injection
 
 ### Milestone 2.2: Text-to-Speech System
-- [ ] Evaluate TTS options (espeak via Process, Azure Speech, local engines)
-- [ ] Implement ITtsEngine interface
-- [ ] Create EspeakTtsEngine implementation
-- [ ] Add voice selection and configuration
-- [ ] Add speech rate and volume controls
-- [ ] Test TTS output quality
+- [x] Evaluate TTS options (espeak via Process, Azure Speech, local engines)
+- [x] Implement ITtsEngine interface
+- [x] Create EspeakTtsEngine implementation
+- [x] Add voice selection and configuration
+- [x] Add speech rate and volume controls
+- [x] Test TTS output quality
 
 ### Milestone 2.3: Meshtastic Message Handling
-- [ ] Implement serial port communication (System.IO.Ports)
-- [ ] Parse Meshtastic protobuf messages
-- [ ] Create MeshtasticService as hosted service
-- [ ] Implement message queue with Channel<T>
-- [ ] Connect incoming messages to TTS
-- [ ] Add message filtering (node ID, channel)
-- [ ] Handle special commands/prefixes
+- [x] Implement serial port communication (System.IO.Ports)
+- [x] Parse Meshtastic protobuf messages
+- [x] Create MeshtasticService as hosted service
+- [x] Implement message queue with Channel<T>
+- [x] Connect incoming messages to TTS
+- [x] Add message filtering (node ID, channel)
+- [x] Handle special commands/prefixes
 
 ### Milestone 2.4: Web Server Foundation
-- [ ] Set up ASP.NET Core minimal API
-- [ ] Create basic REST endpoints
-- [ ] Implement device status endpoint
-- [ ] Add configuration API with IOptions<T>
-- [ ] Create systemd service for auto-start
+- [x] Set up ASP.NET Core minimal API
+- [x] Create basic REST endpoints
+- [x] Implement device status endpoint
+- [x] Add configuration API with IOptions<T>
+- [x] Create systemd service for auto-start
 
 ---
 
@@ -67,35 +67,35 @@
 **Goal**: Real-time voice communication over WiFi
 
 ### Milestone 3.1: Audio Protocol Selection
-- [ ] Evaluate WebSocket vs SignalR for audio streaming
-- [ ] Prototype WebSocket binary streaming
-- [ ] Measure latency and quality
-- [ ] Select optimal solution
-- [ ] Document protocol decision
+- [x] Evaluate WebSocket vs SignalR for audio streaming
+- [x] Prototype WebSocket binary streaming
+- [x] Measure latency and quality
+- [x] Select optimal solution
+- [x] Document protocol decision
 
 ### Milestone 3.2: Server-Side Audio (Handler → Cosplayer)
-- [ ] Implement WebSocket endpoint for receiving handler audio
-- [ ] Create audio buffer management with System.Threading.Channels
-- [ ] Integrate with ALSA playback via aplay/P/Invoke
-- [ ] Handle connection drops gracefully
-- [ ] Optimize for low latency
+- [x] Implement WebSocket endpoint for receiving handler audio
+- [x] Create audio buffer management with System.Threading.Channels
+- [x] Integrate with ALSA playback via aplay/P/Invoke
+- [x] Handle connection drops gracefully
+- [x] Optimize for low latency
 
 ### Milestone 3.3: Cosplayer Microphone (Cosplayer → Handler)
-- [ ] Implement ALSA audio capture via arecord
-- [ ] Create WebSocket endpoint for streaming to handler
-- [ ] Implement Voice Activity Detection (VAD)
-- [ ] Add VOX mode (voice-activated transmission)
-- [ ] Add PTT mode (GPIO button support)
-- [ ] Handle echo/feedback prevention
+- [x] Implement ALSA audio capture via arecord
+- [x] Create WebSocket endpoint for streaming to handler
+- [x] Implement Voice Activity Detection (VAD)
+- [x] Add VOX mode (voice-activated transmission)
+- [x] Add PTT mode (GPIO button support)
+- [x] Handle echo/feedback prevention
 
 ### Milestone 3.4: Web Interface (Handler)
-- [ ] Create responsive mobile-first UI
-- [ ] Implement microphone capture with Web Audio API
-- [ ] Add push-to-talk button for handler
-- [ ] Add audio playback for cosplayer's voice
-- [ ] Show connection status and voice activity indicators
-- [ ] Add volume/settings controls
-- [ ] Bundle static files with ASP.NET Core
+- [x] Create responsive mobile-first UI
+- [x] Implement microphone capture with Web Audio API
+- [x] Add push-to-talk button for handler
+- [x] Add audio playback for cosplayer's voice
+- [x] Show connection status and voice activity indicators
+- [x] Add volume/settings controls
+- [x] Bundle static files with ASP.NET Core
 
 ---
 
@@ -103,11 +103,11 @@
 **Goal**: Production-ready system
 
 ### Milestone 4.1: Robustness
-- [ ] Add automatic reconnection logic
-- [ ] Implement IHostedService lifecycle management
-- [ ] Add structured logging with Serilog
-- [ ] Handle edge cases (no audio device, etc.)
-- [ ] Create health check endpoint
+- [x] Add automatic reconnection logic
+- [x] Implement IHostedService lifecycle management
+- [x] Add structured logging with Serilog
+- [x] Handle edge cases (no audio device, etc.)
+- [x] Create health check endpoint
 - [ ] Add Polly for retry policies
 
 ### Milestone 4.2: Security
@@ -250,10 +250,10 @@
 
 | Version | Status | Target Hardware | Description |
 |---------|--------|-----------------|-------------|
-| 0.1.0 | Planned | Pi 4 | Basic TTS via Meshtastic |
-| 0.2.0 | Planned | Pi 4 | Web interface foundation |
-| 0.3.0 | Planned | Pi 4 | Audio streaming MVP |
-| 0.4.0 | Planned | Pi 4 | Reliability improvements |
+| 0.1.0 | Complete | Pi 4 | Basic TTS via Meshtastic |
+| 0.2.0 | Complete | Pi 4 | Web interface foundation |
+| 0.3.0 | Complete | Pi 4 | Audio streaming MVP |
+| 0.4.0 | In Progress | Pi 4 | Reliability improvements |
 | 1.0.0 | Planned | Pi 4 | DIY release - fully functional |
 | 1.1.0 | Planned | Pi 4 | Mobile app (optional) |
 | 2.0.0 | Planned | Pi 4 / Pi 5 | Multi-device support |
