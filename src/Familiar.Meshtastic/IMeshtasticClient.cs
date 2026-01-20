@@ -1,4 +1,22 @@
+using Familiar.Meshtastic.Connection;
+
 namespace Familiar.Meshtastic;
+
+/// <summary>
+/// Event arguments for when a node is updated.
+/// </summary>
+public class NodeUpdatedEventArgs : EventArgs
+{
+    public NodeUpdatedEventArgs(MeshtasticNode node)
+    {
+        Node = node;
+    }
+
+    /// <summary>
+    /// The updated node.
+    /// </summary>
+    public MeshtasticNode Node { get; }
+}
 
 /// <summary>
 /// Interface for Meshtastic device communication.
@@ -11,9 +29,19 @@ public interface IMeshtasticClient : IDisposable
     bool IsConnected { get; }
 
     /// <summary>
+    /// Gets the current connection state.
+    /// </summary>
+    ConnectionState ConnectionState { get; }
+
+    /// <summary>
     /// Gets the list of known nodes on the mesh network.
     /// </summary>
     IReadOnlyList<MeshtasticNode> KnownNodes { get; }
+
+    /// <summary>
+    /// Gets this node's number (after connected).
+    /// </summary>
+    uint? MyNodeNum { get; }
 
     /// <summary>
     /// Event raised when a text message is received.
@@ -24,6 +52,11 @@ public interface IMeshtasticClient : IDisposable
     /// Event raised when connection state changes.
     /// </summary>
     event EventHandler<bool>? ConnectionStateChanged;
+
+    /// <summary>
+    /// Event raised when a node is discovered or updated.
+    /// </summary>
+    event EventHandler<NodeUpdatedEventArgs>? NodeUpdated;
 
     /// <summary>
     /// Connects to the Meshtastic device.

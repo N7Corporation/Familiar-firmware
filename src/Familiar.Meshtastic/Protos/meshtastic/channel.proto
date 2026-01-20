@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option csharp_namespace = "Meshtastic.Protobufs";
+
+// Channel settings
+message ChannelSettings {
+  // Channel hash used for channel discovery
+  uint32 channel_num = 1;
+
+  // Pre-shared key (empty = disabled, 1 byte = simple, 16 bytes = AES128, 32 bytes = AES256)
+  bytes psk = 2;
+
+  // Channel name (human readable)
+  string name = 3;
+
+  // Unique identifier for the channel
+  fixed32 id = 4;
+
+  // Whether uplink is enabled
+  bool uplink_enabled = 5;
+
+  // Whether downlink is enabled
+  bool downlink_enabled = 6;
+
+  // Module settings (optional)
+  ModuleSettings module_settings = 7;
+}
+
+// Module settings for a channel
+message ModuleSettings {
+  // Position precision (0 = disabled)
+  uint32 position_precision = 1;
+
+  // Whether to allow remote GPIO
+  bool is_client_muted = 2;
+}
+
+// Channel configuration
+message Channel {
+  // Channel index
+  int32 index = 1;
+
+  // Channel settings
+  ChannelSettings settings = 2;
+
+  // Role of this channel
+  Role role = 3;
+
+  enum Role {
+    // Channel is disabled
+    DISABLED = 0;
+    // Primary channel
+    PRIMARY = 1;
+    // Secondary channel
+    SECONDARY = 2;
+  }
+}

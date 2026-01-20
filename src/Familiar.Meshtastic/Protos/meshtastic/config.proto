@@ -1,0 +1,924 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option csharp_namespace = "Meshtastic.Protobufs";
+
+// Local configuration
+message LocalConfig {
+  // Device configuration
+  Config.DeviceConfig device = 1;
+
+  // Position configuration
+  Config.PositionConfig position = 2;
+
+  // Power configuration
+  Config.PowerConfig power = 3;
+
+  // Network configuration
+  Config.NetworkConfig network = 4;
+
+  // Display configuration
+  Config.DisplayConfig display = 5;
+
+  // LoRa configuration
+  Config.LoRaConfig lora = 6;
+
+  // Bluetooth configuration
+  Config.BluetoothConfig bluetooth = 7;
+
+  // Security configuration
+  Config.SecurityConfig security = 8;
+}
+
+// Module configuration
+message LocalModuleConfig {
+  // MQTT module config
+  ModuleConfig.MQTTConfig mqtt = 1;
+
+  // Serial module config
+  ModuleConfig.SerialConfig serial = 2;
+
+  // External notification config
+  ModuleConfig.ExternalNotificationConfig external_notification = 3;
+
+  // Store forward config
+  ModuleConfig.StoreForwardConfig store_forward = 4;
+
+  // Range test config
+  ModuleConfig.RangeTestConfig range_test = 5;
+
+  // Telemetry config
+  ModuleConfig.TelemetryConfig telemetry = 6;
+
+  // Canned message config
+  ModuleConfig.CannedMessageConfig canned_message = 7;
+
+  // Audio config
+  ModuleConfig.AudioConfig audio = 8;
+
+  // Remote hardware config
+  ModuleConfig.RemoteHardwareConfig remote_hardware = 9;
+
+  // Neighbor info config
+  ModuleConfig.NeighborInfoConfig neighbor_info = 10;
+
+  // Detection sensor config
+  ModuleConfig.DetectionSensorConfig detection_sensor = 11;
+
+  // Ambient lighting config
+  ModuleConfig.AmbientLightingConfig ambient_lighting = 12;
+
+  // Paxcounter config
+  ModuleConfig.PaxcounterConfig paxcounter = 13;
+}
+
+// Configuration container
+message Config {
+  // Device configuration
+  message DeviceConfig {
+    // Role of the device
+    Role role = 1;
+
+    // Whether serial output is enabled
+    bool serial_enabled = 2;
+
+    // Rebroadcast mode
+    RebroadcastMode rebroadcast_mode = 4;
+
+    // Node info broadcast seconds
+    uint32 node_info_broadcast_secs = 5;
+
+    // Double tap as button press
+    bool double_tap_as_button_press = 6;
+
+    // Whether buzzer mode is enabled
+    bool is_managed = 7;
+
+    // Whether the node is disabled
+    bool disable_triple_click = 8;
+
+    // Device role
+    enum Role {
+      // Client (default)
+      CLIENT = 0;
+      // Client with mute
+      CLIENT_MUTE = 1;
+      // Client with hidden position
+      CLIENT_HIDDEN = 2;
+      // Tracker
+      TRACKER = 3;
+      // Lost and found
+      LOST_AND_FOUND = 4;
+      // Sensor
+      SENSOR = 5;
+      // TAK
+      TAK = 6;
+      // TAK Tracker
+      TAK_TRACKER = 7;
+      // Repeater
+      REPEATER = 8;
+      // Router
+      ROUTER = 9;
+    }
+
+    // Rebroadcast mode
+    enum RebroadcastMode {
+      // All messages
+      ALL = 0;
+      // All but decode
+      ALL_SKIP_DECODING = 1;
+      // Local only
+      LOCAL_ONLY = 2;
+      // Known only
+      KNOWN_ONLY = 3;
+      // None
+      NONE = 4;
+    }
+  }
+
+  // Position configuration
+  message PositionConfig {
+    // Position broadcast seconds
+    uint32 position_broadcast_secs = 1;
+
+    // Position broadcast smart enabled
+    bool position_broadcast_smart_enabled = 2;
+
+    // Fixed position
+    bool fixed_position = 3;
+
+    // Smart position minimum distance
+    uint32 broadcast_smart_minimum_distance = 7;
+
+    // Smart position minimum interval
+    uint32 broadcast_smart_minimum_interval_secs = 8;
+
+    // GPS mode
+    GpsMode gps_mode = 9;
+
+    // GPS update interval
+    uint32 gps_update_interval = 10;
+
+    // GPS attempt time
+    uint32 gps_attempt_time = 11;
+
+    // Position flags
+    uint32 position_flags = 12;
+
+    // Rx GPIO
+    uint32 rx_gpio = 13;
+
+    // Tx GPIO
+    uint32 tx_gpio = 14;
+
+    enum GpsMode {
+      // Disabled
+      DISABLED = 0;
+      // Enabled
+      ENABLED = 1;
+      // Not present
+      NOT_PRESENT = 2;
+    }
+  }
+
+  // Power configuration
+  message PowerConfig {
+    // Whether to shutdown on power loss
+    bool is_power_saving = 1;
+
+    // On battery shutdown after seconds
+    uint32 on_battery_shutdown_after_secs = 2;
+
+    // ADC multiplier override
+    float adc_multiplier_override = 3;
+
+    // Wait for Bluetooth seconds
+    uint32 wait_bluetooth_secs = 4;
+
+    // Screen on seconds
+    uint32 sds_secs = 6;
+
+    // Light sleep seconds
+    uint32 ls_secs = 7;
+
+    // Minimum wake seconds
+    uint32 min_wake_secs = 8;
+
+    // Device battery INA address
+    uint32 device_battery_ina_address = 9;
+  }
+
+  // Network configuration
+  message NetworkConfig {
+    // WiFi enabled
+    bool wifi_enabled = 1;
+
+    // WiFi SSID
+    string wifi_ssid = 3;
+
+    // WiFi PSK
+    string wifi_psk = 4;
+
+    // NTP server
+    string ntp_server = 5;
+
+    // Eth enabled
+    bool eth_enabled = 6;
+
+    // Address mode
+    AddressMode address_mode = 7;
+
+    // IP config
+    IpV4Config ipv4_config = 8;
+
+    // Rsyslog server
+    string rsyslog_server = 9;
+
+    enum AddressMode {
+      // DHCP
+      DHCP = 0;
+      // Static
+      STATIC = 1;
+    }
+  }
+
+  // IPv4 config
+  message IpV4Config {
+    // IP address
+    fixed32 ip = 1;
+
+    // Gateway
+    fixed32 gateway = 2;
+
+    // Subnet
+    fixed32 subnet = 3;
+
+    // DNS
+    fixed32 dns = 4;
+  }
+
+  // Display configuration
+  message DisplayConfig {
+    // Screen on seconds
+    uint32 screen_on_secs = 1;
+
+    // GPS format
+    GpsCoordinateFormat gps_format = 2;
+
+    // Auto screen carousel seconds
+    uint32 auto_screen_carousel_secs = 3;
+
+    // Compass north top
+    bool compass_north_top = 4;
+
+    // Flip screen
+    bool flip_screen = 5;
+
+    // Units
+    DisplayUnits units = 6;
+
+    // OLED
+    OledType oled = 7;
+
+    // Display mode
+    DisplayMode displaymode = 8;
+
+    // Heading bold
+    bool heading_bold = 9;
+
+    // Wake on tap or motion
+    bool wake_on_tap_or_motion = 10;
+
+    enum GpsCoordinateFormat {
+      // Decimal degrees
+      DEC = 0;
+      // Degrees minutes seconds
+      DMS = 1;
+      // UTM
+      UTM = 2;
+      // MGRS
+      MGRS = 3;
+      // OLC
+      OLC = 4;
+      // OSGR
+      OSGR = 5;
+    }
+
+    enum DisplayUnits {
+      // Metric
+      METRIC = 0;
+      // Imperial
+      IMPERIAL = 1;
+    }
+
+    enum OledType {
+      // Auto detect
+      OLED_AUTO = 0;
+      // SSD1306
+      OLED_SSD1306 = 1;
+      // SH1106
+      OLED_SH1106 = 2;
+      // SH1107
+      OLED_SH1107 = 3;
+    }
+
+    enum DisplayMode {
+      // Default
+      DEFAULT = 0;
+      // Twocolor
+      TWOCOLOR = 1;
+      // Inverted
+      INVERTED = 2;
+      // Color
+      COLOR = 3;
+    }
+  }
+
+  // LoRa configuration
+  message LoRaConfig {
+    // Use preset
+    bool use_preset = 1;
+
+    // Modem preset
+    ModemPreset modem_preset = 2;
+
+    // Bandwidth
+    uint32 bandwidth = 3;
+
+    // Spread factor
+    uint32 spread_factor = 4;
+
+    // Coding rate
+    uint32 coding_rate = 5;
+
+    // Frequency offset
+    float frequency_offset = 6;
+
+    // Region
+    RegionCode region = 7;
+
+    // Hop limit
+    uint32 hop_limit = 8;
+
+    // Tx enabled
+    bool tx_enabled = 9;
+
+    // Tx power
+    int32 tx_power = 10;
+
+    // Channel num
+    uint32 channel_num = 11;
+
+    // Override duty cycle
+    bool override_duty_cycle = 12;
+
+    // SX126x rx boosted gain
+    bool sx126x_rx_boosted_gain = 13;
+
+    // Override frequency
+    float override_frequency = 14;
+
+    // Ignore MQTT
+    bool ignore_mqtt = 103;
+
+    enum RegionCode {
+      // Unset
+      UNSET = 0;
+      // US
+      US = 1;
+      // EU_433
+      EU_433 = 2;
+      // EU_868
+      EU_868 = 3;
+      // CN
+      CN = 4;
+      // JP
+      JP = 5;
+      // ANZ
+      ANZ = 6;
+      // KR
+      KR = 7;
+      // TW
+      TW = 8;
+      // RU
+      RU = 9;
+      // IN
+      IN = 10;
+      // NZ_865
+      NZ_865 = 11;
+      // TH
+      TH = 12;
+      // LORA_24
+      LORA_24 = 13;
+      // UA_433
+      UA_433 = 14;
+      // UA_868
+      UA_868 = 15;
+      // MY_433
+      MY_433 = 16;
+      // MY_919
+      MY_919 = 17;
+      // SG_923
+      SG_923 = 18;
+    }
+
+    enum ModemPreset {
+      // Long fast
+      LONG_FAST = 0;
+      // Long slow
+      LONG_SLOW = 1;
+      // Very long slow
+      VERY_LONG_SLOW = 2;
+      // Medium slow
+      MEDIUM_SLOW = 3;
+      // Medium fast
+      MEDIUM_FAST = 4;
+      // Short slow
+      SHORT_SLOW = 5;
+      // Short fast
+      SHORT_FAST = 6;
+      // Long moderate
+      LONG_MODERATE = 7;
+      // Short turbo
+      SHORT_TURBO = 8;
+    }
+  }
+
+  // Bluetooth configuration
+  message BluetoothConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Pairing mode
+    PairingMode mode = 2;
+
+    // Fixed PIN
+    uint32 fixed_pin = 3;
+
+    enum PairingMode {
+      // Random PIN
+      RANDOM_PIN = 0;
+      // Fixed PIN
+      FIXED_PIN = 1;
+      // No PIN
+      NO_PIN = 2;
+    }
+  }
+
+  // Security configuration
+  message SecurityConfig {
+    // Public key
+    bytes public_key = 1;
+
+    // Private key
+    bytes private_key = 2;
+
+    // Admin key
+    bytes admin_key = 3;
+
+    // Is managed
+    bool is_managed = 4;
+
+    // Serial enabled
+    bool serial_enabled = 5;
+
+    // Debug log API enabled
+    bool debug_log_api_enabled = 6;
+
+    // Admin channel enabled
+    bool admin_channel_enabled = 8;
+  }
+}
+
+// Module configuration
+message ModuleConfig {
+  // MQTT config
+  message MQTTConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Address
+    string address = 2;
+
+    // Username
+    string username = 3;
+
+    // Password
+    string password = 4;
+
+    // Encryption enabled
+    bool encryption_enabled = 5;
+
+    // JSON enabled
+    bool json_enabled = 6;
+
+    // TLS enabled
+    bool tls_enabled = 7;
+
+    // Root topic
+    string root = 8;
+
+    // Proxy to client enabled
+    bool proxy_to_client_enabled = 9;
+
+    // Map reporting enabled
+    bool map_reporting_enabled = 10;
+
+    // Map report settings
+    MapReportSettings map_report_settings = 11;
+  }
+
+  // Map report settings
+  message MapReportSettings {
+    // Publish interval seconds
+    uint32 publish_interval_secs = 1;
+
+    // Position precision
+    uint32 position_precision = 2;
+  }
+
+  // Serial config
+  message SerialConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Echo
+    bool echo = 2;
+
+    // RXD
+    uint32 rxd = 3;
+
+    // TXD
+    uint32 txd = 4;
+
+    // Baud
+    Serial_Baud baud = 5;
+
+    // Timeout
+    uint32 timeout = 6;
+
+    // Mode
+    Serial_Mode mode = 7;
+
+    // Override console baud
+    bool override_console_serial_port = 8;
+
+    enum Serial_Baud {
+      // Default
+      BAUD_DEFAULT = 0;
+      // 110
+      BAUD_110 = 1;
+      // 300
+      BAUD_300 = 2;
+      // 600
+      BAUD_600 = 3;
+      // 1200
+      BAUD_1200 = 4;
+      // 2400
+      BAUD_2400 = 5;
+      // 4800
+      BAUD_4800 = 6;
+      // 9600
+      BAUD_9600 = 7;
+      // 19200
+      BAUD_19200 = 8;
+      // 38400
+      BAUD_38400 = 9;
+      // 57600
+      BAUD_57600 = 10;
+      // 115200
+      BAUD_115200 = 11;
+      // 230400
+      BAUD_230400 = 12;
+      // 460800
+      BAUD_460800 = 13;
+      // 576000
+      BAUD_576000 = 14;
+      // 921600
+      BAUD_921600 = 15;
+    }
+
+    enum Serial_Mode {
+      // Default
+      DEFAULT = 0;
+      // Simple
+      SIMPLE = 1;
+      // Protobuf
+      PROTO = 2;
+      // Text message
+      TEXTMSG = 3;
+      // NMEA
+      NMEA = 4;
+      // CalTopo
+      CALTOPO = 5;
+    }
+  }
+
+  // External notification config
+  message ExternalNotificationConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Output ms
+    uint32 output_ms = 2;
+
+    // Output
+    uint32 output = 3;
+
+    // Output vibra
+    uint32 output_vibra = 8;
+
+    // Output buzzer
+    uint32 output_buzzer = 9;
+
+    // Active
+    bool active = 4;
+
+    // Alert message
+    bool alert_message = 5;
+
+    // Alert message vibra
+    bool alert_message_vibra = 10;
+
+    // Alert message buzzer
+    bool alert_message_buzzer = 11;
+
+    // Alert bell
+    bool alert_bell = 6;
+
+    // Alert bell vibra
+    bool alert_bell_vibra = 12;
+
+    // Alert bell buzzer
+    bool alert_bell_buzzer = 13;
+
+    // Use PWM
+    bool use_pwm = 7;
+
+    // Nag timeout
+    uint32 nag_timeout = 14;
+
+    // Use I2S as buzzer
+    bool use_i2s_as_buzzer = 15;
+  }
+
+  // Store forward config
+  message StoreForwardConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Heartbeat
+    bool heartbeat = 2;
+
+    // Records
+    uint32 records = 3;
+
+    // History return max
+    uint32 history_return_max = 4;
+
+    // History return window
+    uint32 history_return_window = 5;
+  }
+
+  // Range test config
+  message RangeTestConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Sender
+    uint32 sender = 2;
+
+    // Save
+    bool save = 3;
+  }
+
+  // Telemetry config
+  message TelemetryConfig {
+    // Device update interval
+    uint32 device_update_interval = 1;
+
+    // Environment update interval
+    uint32 environment_update_interval = 2;
+
+    // Environment measurement enabled
+    bool environment_measurement_enabled = 3;
+
+    // Environment screen enabled
+    bool environment_screen_enabled = 4;
+
+    // Environment display fahrenheit
+    bool environment_display_fahrenheit = 5;
+
+    // Air quality enabled
+    bool air_quality_enabled = 6;
+
+    // Air quality interval
+    uint32 air_quality_interval = 7;
+
+    // Power measurement enabled
+    bool power_measurement_enabled = 8;
+
+    // Power update interval
+    uint32 power_update_interval = 9;
+
+    // Power screen enabled
+    bool power_screen_enabled = 10;
+  }
+
+  // Canned message config
+  message CannedMessageConfig {
+    // Rotary enabled
+    bool rotary1_enabled = 1;
+
+    // Input broker pin A
+    uint32 inputbroker_pin_a = 2;
+
+    // Input broker pin B
+    uint32 inputbroker_pin_b = 3;
+
+    // Input broker pin press
+    uint32 inputbroker_pin_press = 4;
+
+    // Input broker event CW
+    InputEventChar inputbroker_event_cw = 5;
+
+    // Input broker event CCW
+    InputEventChar inputbroker_event_ccw = 6;
+
+    // Input broker event press
+    InputEventChar inputbroker_event_press = 7;
+
+    // Updown enabled
+    bool updown1_enabled = 8;
+
+    // Enabled
+    bool enabled = 9;
+
+    // Allow input source
+    string allow_input_source = 10;
+
+    // Send bell
+    bool send_bell = 11;
+
+    enum InputEventChar {
+      // None
+      NONE = 0;
+      // Up
+      UP = 17;
+      // Down
+      DOWN = 18;
+      // Left
+      LEFT = 19;
+      // Right
+      RIGHT = 20;
+      // Select
+      SELECT = 10;
+      // Back
+      BACK = 27;
+      // Cancel
+      CANCEL = 24;
+    }
+  }
+
+  // Audio config
+  message AudioConfig {
+    // Codec2 enabled
+    bool codec2_enabled = 1;
+
+    // PTT pin
+    uint32 ptt_pin = 2;
+
+    // Bitrate
+    Audio_Baud bitrate = 3;
+
+    // I2S word select
+    uint32 i2s_ws = 4;
+
+    // I2S SD
+    uint32 i2s_sd = 5;
+
+    // I2S din
+    uint32 i2s_din = 6;
+
+    // I2S sck
+    uint32 i2s_sck = 7;
+
+    enum Audio_Baud {
+      // Codec2 default
+      CODEC2_DEFAULT = 0;
+      // Codec2 3200
+      CODEC2_3200 = 1;
+      // Codec2 2400
+      CODEC2_2400 = 2;
+      // Codec2 1600
+      CODEC2_1600 = 3;
+      // Codec2 1400
+      CODEC2_1400 = 4;
+      // Codec2 1300
+      CODEC2_1300 = 5;
+      // Codec2 1200
+      CODEC2_1200 = 6;
+      // Codec2 700
+      CODEC2_700 = 7;
+      // Codec2 700B
+      CODEC2_700B = 8;
+    }
+  }
+
+  // Remote hardware config
+  message RemoteHardwareConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Allow undefined pin access
+    bool allow_undefined_pin_access = 2;
+
+    // Available pins
+    repeated RemoteHardwarePin available_pins = 3;
+  }
+
+  // Remote hardware pin
+  message RemoteHardwarePin {
+    // GPIO pin
+    uint32 gpio_pin = 1;
+
+    // Name
+    string name = 2;
+
+    // Type
+    RemoteHardwarePinType type = 3;
+
+    enum RemoteHardwarePinType {
+      // Unknown
+      UNKNOWN = 0;
+      // Digital read
+      DIGITAL_READ = 1;
+      // Digital write
+      DIGITAL_WRITE = 2;
+    }
+  }
+
+  // Neighbor info config
+  message NeighborInfoConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Update interval
+    uint32 update_interval = 2;
+  }
+
+  // Detection sensor config
+  message DetectionSensorConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Minimum broadcast seconds
+    uint32 minimum_broadcast_secs = 2;
+
+    // State broadcast seconds
+    uint32 state_broadcast_secs = 3;
+
+    // Send bell
+    bool send_bell = 4;
+
+    // Name
+    string name = 5;
+
+    // Monitor pin
+    uint32 monitor_pin = 6;
+
+    // Detection triggered high
+    bool detection_triggered_high = 7;
+
+    // Use pullup
+    bool use_pullup = 8;
+  }
+
+  // Ambient lighting config
+  message AmbientLightingConfig {
+    // LED state
+    bool led_state = 1;
+
+    // Current
+    uint32 current = 2;
+
+    // Red
+    uint32 red = 3;
+
+    // Green
+    uint32 green = 4;
+
+    // Blue
+    uint32 blue = 5;
+  }
+
+  // Paxcounter config
+  message PaxcounterConfig {
+    // Enabled
+    bool enabled = 1;
+
+    // Update interval
+    uint32 paxcounter_update_interval = 2;
+  }
+}

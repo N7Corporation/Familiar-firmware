@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option csharp_namespace = "Meshtastic.Protobufs";
+
+// Device metrics telemetry
+message DeviceMetrics {
+  // Battery level (0-100, >100 = plugged in)
+  uint32 battery_level = 1;
+
+  // Battery voltage
+  float voltage = 2;
+
+  // Channel utilization percentage
+  float channel_utilization = 3;
+
+  // Airtime utilization percentage
+  float air_util_tx = 4;
+
+  // Uptime in seconds
+  uint32 uptime_seconds = 5;
+}
+
+// Environment metrics telemetry
+message EnvironmentMetrics {
+  // Temperature in Celsius
+  float temperature = 1;
+
+  // Relative humidity percentage
+  float relative_humidity = 2;
+
+  // Barometric pressure in hPa
+  float barometric_pressure = 3;
+
+  // Gas resistance in ohms
+  float gas_resistance = 4;
+
+  // Voltage measurement
+  float voltage = 5;
+
+  // Current measurement
+  float current = 6;
+
+  // Indoor Air Quality (0-500)
+  uint32 iaq = 7;
+
+  // Distance in mm
+  float distance = 8;
+
+  // Lux
+  float lux = 9;
+
+  // UV index
+  float uv_lux = 10;
+
+  // Wind direction in degrees
+  uint32 wind_direction = 11;
+
+  // Wind speed in m/s
+  float wind_speed = 12;
+
+  // Weight in kg
+  float weight = 13;
+
+  // Wind gust in m/s
+  float wind_gust = 14;
+
+  // Wind lull in m/s
+  float wind_lull = 15;
+}
+
+// Power metrics telemetry
+message PowerMetrics {
+  // Channel 1 voltage
+  float ch1_voltage = 1;
+
+  // Channel 1 current
+  float ch1_current = 2;
+
+  // Channel 2 voltage
+  float ch2_voltage = 3;
+
+  // Channel 2 current
+  float ch2_current = 4;
+
+  // Channel 3 voltage
+  float ch3_voltage = 5;
+
+  // Channel 3 current
+  float ch3_current = 6;
+}
+
+// Air quality metrics
+message AirQualityMetrics {
+  // PM1.0 concentration
+  uint32 pm10_standard = 1;
+
+  // PM2.5 concentration
+  uint32 pm25_standard = 2;
+
+  // PM10.0 concentration
+  uint32 pm100_standard = 3;
+
+  // PM1.0 environmental
+  uint32 pm10_environmental = 4;
+
+  // PM2.5 environmental
+  uint32 pm25_environmental = 5;
+
+  // PM10.0 environmental
+  uint32 pm100_environmental = 6;
+
+  // Particles > 0.3um count
+  uint32 particles_03um = 7;
+
+  // Particles > 0.5um count
+  uint32 particles_05um = 8;
+
+  // Particles > 1.0um count
+  uint32 particles_10um = 9;
+
+  // Particles > 2.5um count
+  uint32 particles_25um = 10;
+
+  // Particles > 5.0um count
+  uint32 particles_50um = 11;
+
+  // Particles > 10.0um count
+  uint32 particles_100um = 12;
+
+  // CO2 concentration in ppm
+  uint32 co2 = 13;
+}
+
+// Telemetry message wrapper
+message Telemetry {
+  // Timestamp when the telemetry was measured
+  fixed32 time = 1;
+
+  oneof variant {
+    // Device metrics
+    DeviceMetrics device_metrics = 2;
+
+    // Environment metrics
+    EnvironmentMetrics environment_metrics = 3;
+
+    // Air quality metrics
+    AirQualityMetrics air_quality_metrics = 4;
+
+    // Power metrics
+    PowerMetrics power_metrics = 5;
+  }
+}

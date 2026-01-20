@@ -1,5 +1,6 @@
-using System.IO.Ports;
-using System.Text;
+using Familiar.Meshtastic.Connection;
+using Familiar.Meshtastic.Protocol;
+using Meshtastic.Protobufs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -7,34 +8,48 @@ namespace Familiar.Meshtastic;
 
 /// <summary>
 /// Client for communicating with a Meshtastic device over serial port.
+/// Uses the binary protobuf protocol for full device communication.
 /// </summary>
-/// <remarks>
-/// This is a simplified implementation that uses text-mode serial communication.
-/// For full protobuf support, consider using the official Meshtastic libraries.
-/// </remarks>
 public class MeshtasticClient : IMeshtasticClient
 {
     private readonly MeshtasticOptions _options;
     private readonly ILogger<MeshtasticClient> _logger;
-    private SerialPort? _serialPort;
+    private readonly ILoggerFactory _loggerFactory;
+    private MeshtasticConnection? _connection;
     private readonly List<MeshtasticNode> _knownNodes = new();
-    private readonly StringBuilder _receiveBuffer = new();
+    private readonly object _nodesLock = new();
     private bool _disposed;
 
     public MeshtasticClient(
         IOptions<MeshtasticOptions> options,
-        ILogger<MeshtasticClient> logger)
+        ILogger<MeshtasticClient> logger,
+        ILoggerFactory loggerFactory)
     {
         _options = options.Value;
         _logger = logger;
+        _loggerFactory = loggerFactory;
     }
 
-    public bool IsConnected => _serialPort?.IsOpen == true;
+    public bool IsConnected => _connection?.IsConnected == true;
 
-    public IReadOnlyList<MeshtasticNode> KnownNodes => _knownNodes.AsReadOnly();
+    public ConnectionState ConnectionState => _connection?.State ?? Connection.ConnectionState.Disconnected;
+
+    public IReadOnlyList<MeshtasticNode> KnownNodes
+    {
+        get
+        {
+            lock (_nodesLock)
+            {
+                return _knownNodes.ToList().AsReadOnly();
+            }
+        }
+    }
+
+    public uint? MyNodeNum => _connection?.MyNodeInfo?.MyNodeNum;
 
     public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
     public event EventHandler<bool>? ConnectionStateChanged;
+    public event EventHandler<NodeUpdatedEventArgs>? NodeUpdated;
 
     public async Task ConnectAsync(CancellationToken ct = default)
     {
@@ -49,133 +64,94 @@ public class MeshtasticClient : IMeshtasticClient
             return;
         }
 
-        try
+        // Create connection
+        _connection = new MeshtasticConnection(
+            _options,
+            _loggerFactory.CreateLogger<MeshtasticConnection>());
+
+        // Wire up events
+        _connection.StateChanged += OnConnectionStateChanged;
+        _connection.Dispatcher.PacketReceived += OnPacketReceived;
+        _connection.Dispatcher.NodeInfoReceived += OnNodeInfoReceived;
+
+        // Connect
+        var connected = await _connection.ConnectAsync(ct);
+
+        if (connected)
         {
-            _serialPort = new SerialPort(_options.Port, _options.BaudRate)
-            {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000,
-                Encoding = Encoding.UTF8
-            };
-
-            _serialPort.DataReceived += OnDataReceived;
-            _serialPort.ErrorReceived += OnErrorReceived;
-            _serialPort.Open();
-
             _logger.LogInformation("Connected to Meshtastic device on {Port}", _options.Port);
-            ConnectionStateChanged?.Invoke(this, true);
 
-            // Give the device time to initialize
-            await Task.Delay(100, ct);
+            // Populate known nodes from device's node database
+            PopulateKnownNodesFromConnection();
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Failed to connect to Meshtastic device on {Port}", _options.Port);
-            _serialPort?.Dispose();
-            _serialPort = null;
-            throw;
+            _logger.LogError("Failed to connect to Meshtastic device on {Port}", _options.Port);
+            await CleanupConnection();
         }
     }
 
-    public Task DisconnectAsync()
+    public async Task DisconnectAsync()
     {
-        if (_serialPort != null)
+        if (_connection != null)
         {
-            _serialPort.DataReceived -= OnDataReceived;
-            _serialPort.ErrorReceived -= OnErrorReceived;
-
-            if (_serialPort.IsOpen)
-            {
-                _serialPort.Close();
-            }
-
-            _serialPort.Dispose();
-            _serialPort = null;
-
+            await _connection.DisconnectAsync();
+            await CleanupConnection();
             _logger.LogInformation("Disconnected from Meshtastic device");
-            ConnectionStateChanged?.Invoke(this, false);
         }
-
-        return Task.CompletedTask;
     }
 
     public async Task SendMessageAsync(string text, string? destinationNode = null, CancellationToken ct = default)
     {
-        if (!IsConnected)
+        if (_connection == null || !IsConnected)
         {
             throw new InvalidOperationException("Not connected to Meshtastic device");
         }
 
-        // This is a simplified implementation
-        // Full implementation would use protobuf encoding
-        var message = destinationNode != null
-            ? $"!sendto {destinationNode} {text}\n"
-            : $"!send {text}\n";
+        uint destination = FrameConstants.BroadcastAddress;
 
-        var data = Encoding.UTF8.GetBytes(message);
-        await _serialPort!.BaseStream.WriteAsync(data, ct);
-        await _serialPort.BaseStream.FlushAsync(ct);
+        if (!string.IsNullOrEmpty(destinationNode))
+        {
+            destination = ParseNodeId(destinationNode);
+        }
 
-        _logger.LogDebug("Sent message: {Message}", text);
+        await _connection.SendTextMessageAsync(
+            text,
+            destination,
+            (uint)_options.Channel,
+            wantAck: false,
+            ct);
+
+        _logger.LogDebug("Sent message to {Destination}: {Text}",
+            destinationNode ?? "broadcast", text);
     }
 
-    private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
+    private void OnConnectionStateChanged(object? sender, ConnectionStateChangedEventArgs e)
     {
-        if (_serialPort == null || !_serialPort.IsOpen)
+        var isConnected = e.NewState == Connection.ConnectionState.Connected;
+        var wasConnected = e.OldState == Connection.ConnectionState.Connected;
+
+        if (isConnected != wasConnected)
         {
-            return;
-        }
-
-        try
-        {
-            var data = _serialPort.ReadExisting();
-            _receiveBuffer.Append(data);
-
-            // Process complete lines
-            var content = _receiveBuffer.ToString();
-            var lines = content.Split('\n');
-
-            // Keep incomplete line in buffer
-            _receiveBuffer.Clear();
-            if (!content.EndsWith('\n') && lines.Length > 0)
-            {
-                _receiveBuffer.Append(lines[^1]);
-                lines = lines[..^1];
-            }
-
-            foreach (var line in lines)
-            {
-                ProcessLine(line.Trim());
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error reading from serial port");
+            ConnectionStateChanged?.Invoke(this, isConnected);
         }
     }
 
-    private void OnErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+    private void OnPacketReceived(object? sender, MeshPacketReceivedEventArgs e)
     {
-        _logger.LogError("Serial port error: {Error}", e.EventType);
-    }
+        var packet = e.Packet;
 
-    private void ProcessLine(string line)
-    {
-        if (string.IsNullOrWhiteSpace(line))
+        // Check if this is a decoded packet with text message
+        if (packet.PayloadVariantCase == MeshPacket.PayloadVariantOneofCase.Decoded)
         {
-            return;
-        }
+            var data = packet.Decoded;
+            var text = MessageSerializer.ExtractTextMessage(data);
 
-        _logger.LogTrace("Received line: {Line}", line);
-
-        // Parse received messages
-        // Format varies by firmware, this is a simplified example
-        if (line.StartsWith("MSG:") || line.Contains("received:"))
-        {
-            try
+            if (text != null)
             {
-                var message = ParseMessage(line);
-                if (message != null && ShouldProcessMessage(message))
+                var message = CreateMeshtasticMessage(packet, text);
+
+                if (ShouldProcessMessage(message))
                 {
                     _logger.LogInformation("Message from {Node}: {Text}",
                         message.FromNode, message.Text);
@@ -183,54 +159,157 @@ public class MeshtasticClient : IMeshtasticClient
                     MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
                 }
             }
-            catch (Exception ex)
+        }
+    }
+
+    private void OnNodeInfoReceived(object? sender, NodeInfoReceivedEventArgs e)
+    {
+        var node = ConvertToMeshtasticNode(e.NodeInfo);
+        UpdateKnownNode(node);
+        NodeUpdated?.Invoke(this, new NodeUpdatedEventArgs(node));
+    }
+
+    private MeshtasticMessage CreateMeshtasticMessage(MeshPacket packet, string text)
+    {
+        var fromNodeId = FormatNodeId(packet.From);
+        var toNodeId = packet.To == FrameConstants.BroadcastAddress
+            ? "broadcast"
+            : FormatNodeId(packet.To);
+
+        // Try to get position from sender's node info
+        double? latitude = null;
+        double? longitude = null;
+        int? altitude = null;
+
+        if (_connection?.NodeDatabase.TryGetValue(packet.From, out var nodeInfo) == true)
+        {
+            var pos = nodeInfo.Position;
+            if (pos != null && pos.LatitudeI != 0)
             {
-                _logger.LogWarning(ex, "Failed to parse message: {Line}", line);
+                latitude = pos.LatitudeI / 1e7;
+                longitude = pos.LongitudeI / 1e7;
+                altitude = pos.Altitude;
+            }
+        }
+
+        return new MeshtasticMessage
+        {
+            FromNode = fromNodeId,
+            ToNode = toNodeId,
+            FromNodeNum = packet.From,
+            ToNodeNum = packet.To,
+            Text = text,
+            Channel = (int)packet.Channel,
+            ReceivedAt = DateTime.UtcNow,
+            Snr = packet.RxSnr,
+            Rssi = packet.RxRssi,
+            PacketId = packet.Id,
+            HopLimit = packet.HopLimit,
+            HopStart = packet.HopStart,
+            Latitude = latitude,
+            Longitude = longitude,
+            Altitude = altitude
+        };
+    }
+
+    private MeshtasticNode ConvertToMeshtasticNode(NodeInfo nodeInfo)
+    {
+        var nodeId = FormatNodeId(nodeInfo.Num);
+
+        // Extract position
+        double? latitude = null;
+        double? longitude = null;
+        int? altitude = null;
+
+        if (nodeInfo.Position != null && nodeInfo.Position.LatitudeI != 0)
+        {
+            latitude = nodeInfo.Position.LatitudeI / 1e7;
+            longitude = nodeInfo.Position.LongitudeI / 1e7;
+            altitude = nodeInfo.Position.Altitude;
+        }
+
+        // Extract device metrics
+        int? batteryLevel = null;
+        float? voltage = null;
+        float? channelUtil = null;
+        float? airUtilTx = null;
+        uint? uptimeSeconds = null;
+
+        if (nodeInfo.DeviceMetrics != null)
+        {
+            batteryLevel = (int)nodeInfo.DeviceMetrics.BatteryLevel;
+            voltage = nodeInfo.DeviceMetrics.Voltage;
+            channelUtil = nodeInfo.DeviceMetrics.ChannelUtilization;
+            airUtilTx = nodeInfo.DeviceMetrics.AirUtilTx;
+            uptimeSeconds = nodeInfo.DeviceMetrics.UptimeSeconds;
+        }
+
+        // Convert last heard
+        DateTime? lastHeard = null;
+        if (nodeInfo.LastHeard > 0)
+        {
+            lastHeard = DateTimeOffset.FromUnixTimeSeconds(nodeInfo.LastHeard).UtcDateTime;
+        }
+
+        return new MeshtasticNode
+        {
+            NodeId = nodeId,
+            NodeNum = nodeInfo.Num,
+            Name = nodeInfo.User?.LongName,
+            ShortName = nodeInfo.User?.ShortName,
+            LastHeard = lastHeard,
+            BatteryLevel = batteryLevel,
+            Voltage = voltage,
+            ChannelUtilization = channelUtil,
+            AirUtilTx = airUtilTx,
+            UptimeSeconds = uptimeSeconds,
+            Snr = nodeInfo.Snr,
+            Latitude = latitude,
+            Longitude = longitude,
+            Altitude = altitude,
+            HardwareModel = nodeInfo.User?.HwModel.ToString(),
+            HopsAway = nodeInfo.HopsAway,
+            ViaMqtt = nodeInfo.ViaMqtt,
+            IsFavorite = nodeInfo.IsFavorite
+        };
+    }
+
+    private void PopulateKnownNodesFromConnection()
+    {
+        if (_connection == null) return;
+
+        lock (_nodesLock)
+        {
+            _knownNodes.Clear();
+
+            foreach (var kvp in _connection.NodeDatabase)
+            {
+                var node = ConvertToMeshtasticNode(kvp.Value);
+                _knownNodes.Add(node);
+            }
+        }
+
+        _logger.LogDebug("Populated {Count} nodes from device database", _knownNodes.Count);
+    }
+
+    private void UpdateKnownNode(MeshtasticNode node)
+    {
+        lock (_nodesLock)
+        {
+            var existingIndex = _knownNodes.FindIndex(n => n.NodeNum == node.NodeNum);
+            if (existingIndex >= 0)
+            {
+                _knownNodes[existingIndex] = node;
+            }
+            else
+            {
+                _knownNodes.Add(node);
             }
         }
     }
 
-    private MeshtasticMessage? ParseMessage(string line)
-    {
-        // This is a simplified parser
-        // Real implementation would use protobuf deserialization
-
-        // Example format: "MSG: !abc123 -> !def456: Hello world"
-        var parts = line.Split(new[] { "->", ":" }, StringSplitOptions.TrimEntries);
-
-        if (parts.Length >= 3)
-        {
-            return new MeshtasticMessage
-            {
-                FromNode = ExtractNodeId(parts[0]),
-                ToNode = ExtractNodeId(parts[1]),
-                Text = string.Join(":", parts.Skip(2)).Trim(),
-                Channel = _options.Channel,
-                ReceivedAt = DateTime.UtcNow
-            };
-        }
-
-        return null;
-    }
-
-    private static string ExtractNodeId(string text)
-    {
-        // Extract node ID (e.g., "!abc123" from "MSG: !abc123")
-        var trimmed = text.Trim();
-        var startIndex = trimmed.IndexOf('!');
-        if (startIndex >= 0)
-        {
-            var endIndex = trimmed.IndexOf(' ', startIndex);
-            return endIndex >= 0
-                ? trimmed[startIndex..endIndex]
-                : trimmed[startIndex..];
-        }
-        return trimmed;
-    }
-
     private bool ShouldProcessMessage(MeshtasticMessage message)
     {
-        // Check if message is from an allowed node
         if (_options.AllowedNodes.Count > 0 &&
             !_options.AllowedNodes.Contains(message.FromNode))
         {
@@ -239,6 +318,42 @@ public class MeshtasticClient : IMeshtasticClient
         }
 
         return true;
+    }
+
+    private async Task CleanupConnection()
+    {
+        if (_connection != null)
+        {
+            _connection.StateChanged -= OnConnectionStateChanged;
+            _connection.Dispatcher.PacketReceived -= OnPacketReceived;
+            _connection.Dispatcher.NodeInfoReceived -= OnNodeInfoReceived;
+            _connection.Dispose();
+            _connection = null;
+        }
+
+        lock (_nodesLock)
+        {
+            _knownNodes.Clear();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Formats a node number as a hex string with ! prefix.
+    /// </summary>
+    private static string FormatNodeId(uint nodeNum)
+    {
+        return $"!{nodeNum:x8}";
+    }
+
+    /// <summary>
+    /// Parses a node ID string to a uint.
+    /// </summary>
+    private static uint ParseNodeId(string nodeId)
+    {
+        var hex = nodeId.TrimStart('!');
+        return Convert.ToUInt32(hex, 16);
     }
 
     public void Dispose()

@@ -41,4 +41,14 @@ public class MeshtasticOptions
     /// Reconnection delay in seconds after connection loss.
     /// </summary>
     public int ReconnectDelaySeconds { get; set; } = 5;
+
+    /// <summary>
+    /// Timeout in milliseconds for device configuration sequence.
+    /// </summary>
+    public int ConfigTimeoutMs { get; set; } = 10000;
+
+    /// <summary>
+    /// Heartbeat interval in milliseconds (0 = disabled).
+    /// </summary>
+    public int HeartbeatIntervalMs { get; set; } = 0;
 }
