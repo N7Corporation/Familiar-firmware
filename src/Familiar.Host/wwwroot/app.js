@@ -153,8 +153,26 @@ class FamiliarClient {
             } else {
                 const msg = JSON.parse(event.data);
                 console.log('Uplink message:', msg);
+
+                // Handle speaking state changes
+                if (msg.type === 'speaking') {
+                    this.updateCosplayerSpeaking(msg.active);
+                }
             }
         };
+    }
+
+    updateCosplayerSpeaking(isSpeaking) {
+        const indicator = document.getElementById('cosplayer-speaking');
+        const text = indicator.querySelector('.speaking-text');
+
+        if (isSpeaking) {
+            indicator.classList.add('active');
+            text.textContent = 'Cosplayer Speaking';
+        } else {
+            indicator.classList.remove('active');
+            text.textContent = 'Cosplayer Silent';
+        }
     }
 
     async playAudioBlob(blob) {
