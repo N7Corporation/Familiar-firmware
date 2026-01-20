@@ -1,3 +1,4 @@
+using Familiar.Meshtastic.Connection;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,31 +9,44 @@ namespace Familiar.Meshtastic.Tests;
 
 /// <summary>
 /// Unit tests for MeshtasticClient.
-/// Tests connection state, message parsing, and node filtering.
+/// Tests connection state, message handling, and node management.
 /// Note: Tests that require actual serial port are skipped without hardware.
 /// </summary>
 public class MeshtasticClientTests : IDisposable
 {
     private readonly Mock<ILogger<MeshtasticClient>> _mockLogger;
+    private readonly Mock<ILoggerFactory> _mockLoggerFactory;
     private readonly MeshtasticOptions _options;
 
     public MeshtasticClientTests()
     {
         _mockLogger = new Mock<ILogger<MeshtasticClient>>();
+        _mockLoggerFactory = new Mock<ILoggerFactory>();
+
+        // Setup logger factory to return mock loggers
+        _mockLoggerFactory
+            .Setup(f => f.CreateLogger(It.IsAny<string>()))
+            .Returns(Mock.Of<ILogger>());
+
         _options = new MeshtasticOptions
         {
             Enabled = true,
             Port = "/dev/ttyUSB0",
             BaudRate = 115200,
             Channel = 0,
-            AllowedNodes = new List<string>()
+            AllowedNodes = new List<string>(),
+            ConfigTimeoutMs = 5000,
+            HeartbeatIntervalMs = 0
         };
     }
 
     private MeshtasticClient CreateClient(MeshtasticOptions? options = null)
     {
         var opts = options ?? _options;
-        return new MeshtasticClient(Options.Create(opts), _mockLogger.Object);
+        return new MeshtasticClient(
+            Options.Create(opts),
+            _mockLogger.Object,
+            _mockLoggerFactory.Object);
     }
 
     public void Dispose()
@@ -48,7 +62,9 @@ public class MeshtasticClientTests : IDisposable
         using var client = CreateClient();
 
         client.IsConnected.Should().BeFalse();
+        client.ConnectionState.Should().Be(ConnectionState.Disconnected);
         client.KnownNodes.Should().BeEmpty();
+        client.MyNodeNum.Should().BeNull();
     }
 
     [Fact]
@@ -74,13 +90,13 @@ public class MeshtasticClientTests : IDisposable
         await client.ConnectAsync();
 
         client.IsConnected.Should().BeFalse();
+        client.ConnectionState.Should().Be(ConnectionState.Disconnected);
     }
 
     [Fact]
     public async Task ConnectAsync_WhenAlreadyConnected_ReturnsImmediately()
     {
-        // This test would require mocking SerialPort which is complex
-        // Instead, we verify the early return logic by checking behavior
+        // This test verifies the early return logic by checking behavior
         var options = new MeshtasticOptions { Enabled = false };
         using var client = CreateClient(options);
 
@@ -92,18 +108,21 @@ public class MeshtasticClientTests : IDisposable
     }
 
     [Fact]
-    public async Task ConnectAsync_InvalidPort_ThrowsException()
+    public async Task ConnectAsync_InvalidPort_DoesNotThrow()
     {
+        // The new implementation handles failures gracefully
         var options = new MeshtasticOptions
         {
             Enabled = true,
-            Port = "/dev/nonexistent_port_12345"
+            Port = "/dev/nonexistent_port_12345",
+            ConfigTimeoutMs = 100
         };
         using var client = CreateClient(options);
 
-        var action = async () => await client.ConnectAsync();
+        // Should not throw, but should fail to connect
+        await client.ConnectAsync();
 
-        await action.Should().ThrowAsync<Exception>();
+        client.IsConnected.Should().BeFalse();
     }
 
     #endregion
@@ -137,82 +156,29 @@ public class MeshtasticClientTests : IDisposable
 
     #endregion
 
-    #region Node ID Extraction Tests
+    #region Node ID Formatting Tests
 
     [Theory]
-    [InlineData("MSG: !abc123 -> !def456", "!abc123")]
-    [InlineData("!xyz789", "!xyz789")]
-    [InlineData("Some text !node123 more", "!node123")]
-    [InlineData("No node here", "No node here")]
-    public void ExtractNodeId_VariousInputs_ExtractsCorrectly(string input, string expected)
+    [InlineData(0x12345678u, "!12345678")]
+    [InlineData(0xABCDEF01u, "!abcdef01")]
+    [InlineData(0x00000001u, "!00000001")]
+    [InlineData(0xFFFFFFFFu, "!ffffffff")]
+    public void FormatNodeId_VariousInputs_FormatsCorrectly(uint nodeNum, string expected)
     {
-        var result = NodeIdHelper.ExtractNodeId(input);
+        var result = NodeIdFormatter.FormatNodeId(nodeNum);
         result.Should().Be(expected);
     }
 
     [Theory]
-    [InlineData("!abc123 extra text", "!abc123")]
-    [InlineData("prefix !abc123", "!abc123")]
-    [InlineData("!abc", "!abc")]
-    public void ExtractNodeId_WithSpaces_ExtractsFirstNodeOnly(string input, string expected)
+    [InlineData("!12345678", 0x12345678u)]
+    [InlineData("!abcdef01", 0xABCDEF01u)]
+    [InlineData("!ABCDEF01", 0xABCDEF01u)]
+    [InlineData("12345678", 0x12345678u)]
+    [InlineData("!00000001", 0x00000001u)]
+    public void ParseNodeId_VariousInputs_ParsesCorrectly(string nodeId, uint expected)
     {
-        var result = NodeIdHelper.ExtractNodeId(input);
+        var result = NodeIdFormatter.ParseNodeId(nodeId);
         result.Should().Be(expected);
-    }
-
-    #endregion
-
-    #region Message Parsing Tests
-
-    [Fact]
-    public void ParseMessage_ValidFormat_ReturnsMessage()
-    {
-        // Format without prefix colon - node IDs directly parseable
-        var line = "!abc123 -> !def456: Hello world";
-
-        var result = MessageParser.ParseMessage(line, 0);
-
-        result.Should().NotBeNull();
-        result!.FromNode.Should().Be("!abc123");
-        result.ToNode.Should().Be("!def456");
-        result.Text.Should().Be("Hello world");
-    }
-
-    [Fact]
-    public void ParseMessage_WithColonsInText_PreservesText()
-    {
-        var line = "!abc123 -> !def456: Time is: 12:30:45";
-
-        var result = MessageParser.ParseMessage(line, 0);
-
-        result.Should().NotBeNull();
-        result!.Text.Should().Contain("12:30:45");
-    }
-
-    [Fact]
-    public void ParseMessage_InvalidFormat_ReturnsNull()
-    {
-        var line = "Invalid message format";
-
-        var result = MessageParser.ParseMessage(line, 0);
-
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public void ParseMessage_EmptyLine_ReturnsNull()
-    {
-        var result = MessageParser.ParseMessage("", 0);
-
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public void ParseMessage_OnlyArrow_ReturnsNull()
-    {
-        var result = MessageParser.ParseMessage("->", 0);
-
-        result.Should().BeNull();
     }
 
     #endregion
@@ -336,64 +302,136 @@ public class MeshtasticClientTests : IDisposable
         connectionState.Should().BeNull(); // Not raised yet
     }
 
+    [Fact]
+    public void NodeUpdated_EventCanBeSubscribed()
+    {
+        using var client = CreateClient();
+        MeshtasticNode? updatedNode = null;
+
+        client.NodeUpdated += (sender, args) => updatedNode = args.Node;
+
+        // Event subscription should work without throwing
+        updatedNode.Should().BeNull(); // Not raised yet
+    }
+
+    #endregion
+
+    #region Options Tests
+
+    [Fact]
+    public void MeshtasticOptions_DefaultValues_AreCorrect()
+    {
+        var options = new MeshtasticOptions();
+
+        options.Enabled.Should().BeTrue();
+        options.Port.Should().Be("/dev/ttyUSB0");
+        options.BaudRate.Should().Be(115200);
+        options.Channel.Should().Be(0);
+        options.AllowedNodes.Should().BeEmpty();
+        options.ReconnectDelaySeconds.Should().Be(5);
+        options.ConfigTimeoutMs.Should().Be(10000);
+        options.HeartbeatIntervalMs.Should().Be(0);
+    }
+
+    #endregion
+
+    #region MeshtasticNode Tests
+
+    [Fact]
+    public void MeshtasticNode_CanBeCreatedWithRequiredProperties()
+    {
+        var node = new MeshtasticNode
+        {
+            NodeId = "!12345678",
+            NodeNum = 0x12345678,
+            Name = "Test Node",
+            ShortName = "TEST"
+        };
+
+        node.NodeId.Should().Be("!12345678");
+        node.NodeNum.Should().Be(0x12345678);
+        node.Name.Should().Be("Test Node");
+        node.ShortName.Should().Be("TEST");
+    }
+
+    [Fact]
+    public void MeshtasticNode_OptionalProperties_AreNullable()
+    {
+        var node = new MeshtasticNode
+        {
+            NodeId = "!12345678"
+        };
+
+        node.Name.Should().BeNull();
+        node.ShortName.Should().BeNull();
+        node.LastHeard.Should().BeNull();
+        node.BatteryLevel.Should().BeNull();
+        node.Voltage.Should().BeNull();
+        node.Latitude.Should().BeNull();
+        node.Longitude.Should().BeNull();
+        node.Altitude.Should().BeNull();
+    }
+
+    #endregion
+
+    #region MeshtasticMessage Tests
+
+    [Fact]
+    public void MeshtasticMessage_CanBeCreatedWithRequiredProperties()
+    {
+        var message = new MeshtasticMessage
+        {
+            FromNode = "!sender01",
+            ToNode = "!receiver1",
+            Text = "Hello, mesh!"
+        };
+
+        message.FromNode.Should().Be("!sender01");
+        message.ToNode.Should().Be("!receiver1");
+        message.Text.Should().Be("Hello, mesh!");
+        message.ReceivedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public void MeshtasticMessage_OptionalProperties_AreNullable()
+    {
+        var message = new MeshtasticMessage
+        {
+            FromNode = "!sender01",
+            ToNode = "!receiver1",
+            Text = "Test"
+        };
+
+        message.Snr.Should().BeNull();
+        message.Rssi.Should().BeNull();
+        message.PacketId.Should().BeNull();
+        message.HopLimit.Should().BeNull();
+        message.Latitude.Should().BeNull();
+        message.Longitude.Should().BeNull();
+    }
+
     #endregion
 }
 
 /// <summary>
-/// Helper class for testing node ID extraction logic.
-/// Mirrors the private ExtractNodeId method.
+/// Helper class for testing node ID formatting.
 /// </summary>
-internal static class NodeIdHelper
+internal static class NodeIdFormatter
 {
-    public static string ExtractNodeId(string text)
+    public static string FormatNodeId(uint nodeNum)
     {
-        var trimmed = text.Trim();
-        var startIndex = trimmed.IndexOf('!');
-        if (startIndex >= 0)
-        {
-            var endIndex = trimmed.IndexOf(' ', startIndex);
-            return endIndex >= 0
-                ? trimmed[startIndex..endIndex]
-                : trimmed[startIndex..];
-        }
-        return trimmed;
+        return $"!{nodeNum:x8}";
     }
-}
 
-/// <summary>
-/// Helper class for testing message parsing logic.
-/// Mirrors the private ParseMessage method.
-/// </summary>
-internal static class MessageParser
-{
-    public static MeshtasticMessage? ParseMessage(string line, int channel)
+    public static uint ParseNodeId(string nodeId)
     {
-        if (string.IsNullOrWhiteSpace(line))
-        {
-            return null;
-        }
-
-        var parts = line.Split(new[] { "->", ":" }, StringSplitOptions.TrimEntries);
-
-        if (parts.Length >= 3)
-        {
-            return new MeshtasticMessage
-            {
-                FromNode = NodeIdHelper.ExtractNodeId(parts[0]),
-                ToNode = NodeIdHelper.ExtractNodeId(parts[1]),
-                Text = string.Join(":", parts.Skip(2)).Trim(),
-                Channel = channel,
-                ReceivedAt = DateTime.UtcNow
-            };
-        }
-
-        return null;
+        var hex = nodeId.TrimStart('!');
+        return Convert.ToUInt32(hex, 16);
     }
 }
 
 /// <summary>
 /// Helper class for testing message filtering logic.
-/// Mirrors the private ShouldProcessMessage method.
 /// </summary>
 internal static class MessageFilter
 {

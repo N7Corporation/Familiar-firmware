@@ -1,0 +1,298 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option csharp_namespace = "Meshtastic.Protobufs";
+
+import "meshtastic/mesh.proto";
+import "meshtastic/channel.proto";
+import "meshtastic/config.proto";
+
+// Admin message for device configuration
+message AdminMessage {
+  oneof payload_variant {
+    // Get channel request
+    uint32 get_channel_request = 1;
+
+    // Get channel response
+    Channel get_channel_response = 2;
+
+    // Get owner request
+    bool get_owner_request = 3;
+
+    // Get owner response
+    User get_owner_response = 4;
+
+    // Get config request
+    ConfigType get_config_request = 5;
+
+    // Get config response
+    Config get_config_response = 6;
+
+    // Get module config request
+    ModuleConfigType get_module_config_request = 7;
+
+    // Get module config response
+    ModuleConfig get_module_config_response = 8;
+
+    // Get canned message module messages request
+    bool get_canned_message_module_messages_request = 10;
+
+    // Get canned message module messages response
+    string get_canned_message_module_messages_response = 11;
+
+    // Get device metadata request
+    bool get_device_metadata_request = 12;
+
+    // Get device metadata response
+    DeviceMetadata get_device_metadata_response = 13;
+
+    // Get ringtone request
+    bool get_ringtone_request = 14;
+
+    // Get ringtone response
+    string get_ringtone_response = 15;
+
+    // Get device connection status request
+    bool get_device_connection_status_request = 16;
+
+    // Get device connection status response
+    DeviceConnectionStatus get_device_connection_status_response = 17;
+
+    // Set ham mode
+    HamParameters set_ham_mode = 18;
+
+    // Get node remote hardware pins request
+    bool get_node_remote_hardware_pins_request = 19;
+
+    // Get node remote hardware pins response
+    NodeRemoteHardwarePinsResponse get_node_remote_hardware_pins_response = 20;
+
+    // Enter DFU mode request
+    bool enter_dfu_mode_request = 21;
+
+    // Delete file request
+    string delete_file_request = 22;
+
+    // Set scale
+    uint32 set_scale = 23;
+
+    // Set owner
+    User set_owner = 32;
+
+    // Set channel
+    Channel set_channel = 33;
+
+    // Set config
+    Config set_config = 34;
+
+    // Set module config
+    ModuleConfig set_module_config = 35;
+
+    // Set canned message module messages
+    string set_canned_message_module_messages = 36;
+
+    // Set ringtone message
+    string set_ringtone_message = 37;
+
+    // Remove by nodenum
+    uint32 remove_by_nodenum = 38;
+
+    // Set favorite node
+    uint32 set_favorite_node = 39;
+
+    // Remove favorite node
+    uint32 remove_favorite_node = 40;
+
+    // Set fixed position
+    Position set_fixed_position = 41;
+
+    // Remove fixed position
+    bool remove_fixed_position = 42;
+
+    // Set time only
+    fixed32 set_time_only = 43;
+
+    // Get UIFrame request
+    bool get_ui_config_request = 44;
+
+    // Get UIFrame response
+    bytes get_ui_config_response = 45;
+
+    // Store UI config
+    bytes store_ui_config = 46;
+
+    // Factory reset device
+    int32 factory_reset_device = 94;
+
+    // Reboot seconds
+    int32 reboot_seconds = 95;
+
+    // Reboot OTA seconds
+    int32 reboot_ota_seconds = 96;
+
+    // Exit simulator
+    bool exit_simulator = 97;
+
+    // Shutdown seconds
+    int32 shutdown_seconds = 98;
+
+    // Node DB reset
+    int32 nodedb_reset = 99;
+
+    // Begin edit settings
+    bool begin_edit_settings = 64;
+
+    // Commit edit settings
+    bool commit_edit_settings = 65;
+
+    // Factory reset config
+    ConfigType factory_reset_config = 66;
+
+    // Factory reset module config
+    ModuleConfigType factory_reset_module_config = 67;
+  }
+
+  // Session passkey (for admin channel security)
+  bytes session_passkey = 101;
+}
+
+// Config types
+enum ConfigType {
+  // Device
+  DEVICE_CONFIG = 0;
+  // Position
+  POSITION_CONFIG = 1;
+  // Power
+  POWER_CONFIG = 2;
+  // Network
+  NETWORK_CONFIG = 3;
+  // Display
+  DISPLAY_CONFIG = 4;
+  // LoRa
+  LORA_CONFIG = 5;
+  // Bluetooth
+  BLUETOOTH_CONFIG = 6;
+  // Security
+  SECURITY_CONFIG = 7;
+}
+
+// Module config types
+enum ModuleConfigType {
+  // MQTT
+  MQTT_CONFIG = 0;
+  // Serial
+  SERIAL_CONFIG = 1;
+  // External notification
+  EXTNOTIF_CONFIG = 2;
+  // Store forward
+  STOREFORWARD_CONFIG = 3;
+  // Range test
+  RANGETEST_CONFIG = 4;
+  // Telemetry
+  TELEMETRY_CONFIG = 5;
+  // Canned message
+  CANNEDMSG_CONFIG = 6;
+  // Audio
+  AUDIO_CONFIG = 7;
+  // Remote hardware
+  REMOTEHARDWARE_CONFIG = 8;
+  // Neighbor info
+  NEIGHBORINFO_CONFIG = 9;
+  // Ambient lighting
+  AMBIENTLIGHTING_CONFIG = 10;
+  // Detection sensor
+  DETECTIONSENSOR_CONFIG = 11;
+  // Paxcounter
+  PAXCOUNTER_CONFIG = 12;
+}
+
+// HAM parameters
+message HamParameters {
+  // Call sign
+  string call_sign = 1;
+
+  // TX power
+  int32 tx_power = 2;
+
+  // Frequency
+  float frequency = 3;
+
+  // Short name
+  string short_name = 4;
+}
+
+// Device connection status
+message DeviceConnectionStatus {
+  // WiFi status
+  WifiConnectionStatus wifi = 1;
+
+  // Ethernet status
+  EthernetConnectionStatus ethernet = 2;
+
+  // Bluetooth status
+  BluetoothConnectionStatus bluetooth = 3;
+
+  // Serial status
+  SerialConnectionStatus serial = 4;
+}
+
+// WiFi connection status
+message WifiConnectionStatus {
+  // Status
+  NetworkConnectionStatus status = 1;
+
+  // SSID
+  string ssid = 2;
+
+  // RSSI
+  int32 rssi = 3;
+}
+
+// Ethernet connection status
+message EthernetConnectionStatus {
+  // Status
+  NetworkConnectionStatus status = 1;
+}
+
+// Bluetooth connection status
+message BluetoothConnectionStatus {
+  // PIN
+  uint32 pin = 1;
+
+  // RSSI
+  int32 rssi = 2;
+
+  // Is connected
+  bool is_connected = 3;
+}
+
+// Serial connection status
+message SerialConnectionStatus {
+  // Baud
+  uint32 baud = 1;
+
+  // Is connected
+  bool is_connected = 2;
+}
+
+// Network connection status
+message NetworkConnectionStatus {
+  // IP address
+  fixed32 ip_address = 1;
+
+  // Is connected
+  bool is_connected = 2;
+
+  // Is MQTT connected
+  bool is_mqtt_connected = 3;
+
+  // Is syslog connected
+  bool is_syslog_connected = 4;
+}
+
+// Node remote hardware pins response
+message NodeRemoteHardwarePinsResponse {
+  // Pins
+  repeated NodeRemoteHardwarePin node_remote_hardware_pins = 1;
+}

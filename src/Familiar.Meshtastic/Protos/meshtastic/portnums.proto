@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package meshtastic;
+
+option csharp_namespace = "Meshtastic.Protobufs";
+
+// Port numbers for Meshtastic applications
+enum PortNum {
+  // Deprecated - unused
+  UNKNOWN_APP = 0;
+
+  // Text message encoding
+  TEXT_MESSAGE_APP = 1;
+
+  // Remote hardware operations
+  REMOTE_HARDWARE_APP = 2;
+
+  // Position data
+  POSITION_APP = 3;
+
+  // Node info
+  NODEINFO_APP = 4;
+
+  // Routing information
+  ROUTING_APP = 5;
+
+  // Admin channel
+  ADMIN_APP = 6;
+
+  // Compressed text message
+  TEXT_MESSAGE_COMPRESSED_APP = 7;
+
+  // Waypoint data
+  WAYPOINT_APP = 8;
+
+  // Audio transmission
+  AUDIO_APP = 9;
+
+  // Detection sensor
+  DETECTION_SENSOR_APP = 10;
+
+  // Reply message
+  REPLY_APP = 32;
+
+  // IP tunnel
+  IP_TUNNEL_APP = 33;
+
+  // Paxcounter
+  PAXCOUNTER_APP = 34;
+
+  // Serial plugin
+  SERIAL_APP = 64;
+
+  // Store and forward
+  STORE_FORWARD_APP = 65;
+
+  // Range test
+  RANGE_TEST_APP = 66;
+
+  // Telemetry
+  TELEMETRY_APP = 67;
+
+  // ZPS (zone position service)
+  ZPS_APP = 68;
+
+  // Simulator
+  SIMULATOR_APP = 69;
+
+  // Traceroute
+  TRACEROUTE_APP = 70;
+
+  // Neighbor info
+  NEIGHBORINFO_APP = 71;
+
+  // ATAK plugin
+  ATAK_PLUGIN = 72;
+
+  // Map report
+  MAP_REPORT_APP = 73;
+
+  // Private app
+  PRIVATE_APP = 256;
+
+  // ATAK forwarder
+  ATAK_FORWARDER = 257;
+
+  // Maximum port number
+  MAX = 511;
+}

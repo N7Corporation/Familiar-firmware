@@ -20,6 +20,8 @@ public class MeshtasticOptionsTests
         options.Channel.Should().Be(0);
         options.AllowedNodes.Should().BeEmpty();
         options.ReconnectDelaySeconds.Should().Be(5);
+        options.ConfigTimeoutMs.Should().Be(10000);
+        options.HeartbeatIntervalMs.Should().Be(0);
     }
 
     [Fact]
@@ -102,5 +104,27 @@ public class MeshtasticOptionsTests
     {
         var options = new MeshtasticOptions { Enabled = false };
         options.Enabled.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(1000)]
+    [InlineData(5000)]
+    [InlineData(10000)]
+    [InlineData(30000)]
+    public void ConfigTimeoutMs_AcceptsValidValues(int timeout)
+    {
+        var options = new MeshtasticOptions { ConfigTimeoutMs = timeout };
+        options.ConfigTimeoutMs.Should().Be(timeout);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(5000)]
+    [InlineData(30000)]
+    [InlineData(60000)]
+    public void HeartbeatIntervalMs_AcceptsValidValues(int interval)
+    {
+        var options = new MeshtasticOptions { HeartbeatIntervalMs = interval };
+        options.HeartbeatIntervalMs.Should().Be(interval);
     }
 }
