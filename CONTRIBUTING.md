@@ -73,6 +73,36 @@ Use the **Task** template when:
 - Documenting TODO items
 - Tracking implementation work
 
+## AI Coding Tools
+
+AI-assisted development tools are permitted with the following guidelines:
+
+1. **No AI for Art Assets** - AI tools may not be used to generate or modify any art assets (images, icons, graphics, etc.)
+
+2. **Human Review Required** - All AI-generated code and documentation must be reviewed and approved by a human contributor before submission
+
+3. **Build and Test Requirements** - All tests must pass and the project must build successfully before any merge. Only **Alphabetalambda** and Senior Maintainers have authority to override this requirement
+
+4. **Disclosure Required** - Contributors must note in their pull request when AI tools were used to generate code or documentation and what tool was used
+
+5. **Understanding Requirement** - Contributors must understand and be able to explain any AI-generated code they submit. Copy-pasting without comprehension is not acceptable
+
+6. **No Sensitive Data in Prompts** - Never paste API keys, secrets, credentials, or proprietary information into AI tools
+
+7. **Security Review** - AI-generated code must be specifically reviewed for security vulnerabilities (injection attacks, XSS, etc.)
+
+8. **License Compliance** - Contributors are responsible for ensuring AI-generated code does not violate any third-party licenses
+
+9. **Approved Tools** - Contributors must only use Approved AI tools, only **Alphabetalambda** and Senior Maintainers have authority to add approved tools
+
+## Approved AI Tools
+
+- Claude Code
+- GitHub Copilot
+- Perplexity (researching and documentation only)
+- Gemini-cli
+- JetBrains AI Assistant
+
 ## Code Style
 
 - Follow C# conventions
