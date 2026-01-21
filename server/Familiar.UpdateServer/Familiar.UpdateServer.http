@@ -1,0 +1,6 @@
+@Familiar.UpdateServer_HostAddress = http://localhost:5072
+
+GET {{Familiar.UpdateServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
