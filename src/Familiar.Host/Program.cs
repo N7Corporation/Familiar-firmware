@@ -38,6 +38,8 @@ builder.Services.Configure<MeshtasticOptions>(
     builder.Configuration.GetSection(MeshtasticOptions.SectionName));
 builder.Services.Configure<CameraOptions>(
     builder.Configuration.GetSection(CameraOptions.SectionName));
+builder.Services.Configure<UpdateOptions>(
+    builder.Configuration.GetSection(UpdateOptions.SectionName));
 
 // Security services
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -120,6 +122,10 @@ builder.Services.AddSingleton<AudioDownlinkHandler>();
 builder.Services.AddSingleton<AudioUplinkHandler>();
 builder.Services.AddSingleton<VideoStreamHandler>();
 
+// Update service
+builder.Services.AddSingleton<IUpdateService, UpdateService>();
+builder.Services.AddHostedService(sp => (UpdateService)sp.GetRequiredService<IUpdateService>());
+
 var app = builder.Build();
 
 // Initialize services
@@ -187,6 +193,7 @@ app.MapAudioEndpoints();
 app.MapTtsEndpoints();
 app.MapMeshtasticEndpoints();
 app.MapCameraEndpoints();
+app.MapUpdateEndpoints();
 
 try
 {
