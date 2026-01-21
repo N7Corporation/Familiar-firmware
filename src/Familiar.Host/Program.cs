@@ -1,9 +1,15 @@
+using System.Text;
+using System.Threading.RateLimiting;
 using Familiar.Audio;
 using Familiar.Camera;
 using Familiar.Host.Endpoints;
+using Familiar.Host.Options;
+using Familiar.Host.Services;
 using Familiar.Host.WebSockets;
 using Familiar.Meshtastic;
 using Familiar.Tts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +28,8 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Configuration
+builder.Services.Configure<SecurityOptions>(
+    builder.Configuration.GetSection(SecurityOptions.SectionName));
 builder.Services.Configure<AudioOptions>(
     builder.Configuration.GetSection(AudioOptions.SectionName));
 builder.Services.Configure<TtsOptions>(
@@ -30,6 +38,76 @@ builder.Services.Configure<MeshtasticOptions>(
     builder.Configuration.GetSection(MeshtasticOptions.SectionName));
 builder.Services.Configure<CameraOptions>(
     builder.Configuration.GetSection(CameraOptions.SectionName));
+
+// Security services
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+// JWT Authentication
+var securityConfig = builder.Configuration.GetSection(SecurityOptions.SectionName).Get<SecurityOptions>() ?? new SecurityOptions();
+var jwtKey = Encoding.UTF8.GetBytes(securityConfig.Jwt.Key);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
+            ValidateIssuer = true,
+            ValidIssuer = securityConfig.Jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = securityConfig.Jwt.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+
+        // Support token in query string for WebSocket connections
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/ws"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("default", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = securityConfig.RateLimiting.PermitLimit,
+                Window = TimeSpan.FromMinutes(securityConfig.RateLimiting.WindowMinutes),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
 
 // Add services
 builder.Services.AddFamiliarAudio();
@@ -46,6 +124,11 @@ var app = builder.Build();
 
 // Initialize services
 await InitializeServicesAsync(app.Services);
+
+// Security middleware
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 // Static files for web UI
 app.UseDefaultFiles();
@@ -98,6 +181,7 @@ app.Map("/ws/video", async context =>
 });
 
 // API endpoints
+app.MapAuthEndpoints();
 app.MapStatusEndpoints();
 app.MapAudioEndpoints();
 app.MapTtsEndpoints();

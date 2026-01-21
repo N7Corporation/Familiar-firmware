@@ -7,7 +7,9 @@ public static class TtsEndpoints
 {
     public static void MapTtsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/tts");
+        var group = app.MapGroup("/api/tts")
+            .RequireAuthorization()
+            .RequireRateLimiting("default");
 
         group.MapGet("/status", (ITtsEngine tts) =>
         {

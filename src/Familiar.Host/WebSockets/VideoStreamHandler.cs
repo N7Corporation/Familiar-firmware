@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using Familiar.Camera;
+using Familiar.Host.Services;
 
 namespace Familiar.Host.WebSockets;
 
@@ -11,18 +12,29 @@ namespace Familiar.Host.WebSockets;
 public class VideoStreamHandler
 {
     private readonly ICameraService _cameraService;
+    private readonly ITokenService _tokenService;
     private readonly ILogger<VideoStreamHandler> _logger;
 
     public VideoStreamHandler(
         ICameraService cameraService,
+        ITokenService tokenService,
         ILogger<VideoStreamHandler> logger)
     {
         _cameraService = cameraService;
+        _tokenService = tokenService;
         _logger = logger;
     }
 
     public async Task HandleAsync(HttpContext context)
     {
+        // Validate token from query string
+        if (!context.Request.Query.TryGetValue("access_token", out var token) ||
+            !_tokenService.ValidateToken(token!))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+
         if (!_cameraService.IsAvailable)
         {
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

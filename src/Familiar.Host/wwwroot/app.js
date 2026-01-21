@@ -10,17 +10,135 @@ class FamiliarClient {
         this.mediaRecorder = null;
         this.isRecording = false;
         this.isPttActive = false;
+        this.token = null;
 
         this.init();
     }
 
     async init() {
-        this.setupEventListeners();
-        await this.checkStatus();
-        this.connectWebSockets();
+        // Check for existing token
+        this.token = localStorage.getItem('familiar_token');
 
-        // Poll status periodically
-        setInterval(() => this.checkStatus(), 10000);
+        if (this.token && await this.validateToken()) {
+            this.showMainUI();
+            this.setupEventListeners();
+            await this.checkStatus();
+            this.connectWebSockets();
+            setInterval(() => this.checkStatus(), 10000);
+        } else {
+            this.showLoginUI();
+        }
+
+        this.setupLoginListeners();
+    }
+
+    setupLoginListeners() {
+        const loginForm = document.getElementById('login-form');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.login();
+        });
+
+        logoutBtn.addEventListener('click', () => this.logout());
+    }
+
+    async login() {
+        const pinInput = document.getElementById('pin-input');
+        const errorDiv = document.getElementById('login-error');
+        const loginBtn = document.getElementById('login-btn');
+
+        const pin = pinInput.value.trim();
+        if (!pin) {
+            errorDiv.textContent = 'Please enter a PIN';
+            return;
+        }
+
+        loginBtn.disabled = true;
+        errorDiv.textContent = '';
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.token = data.token;
+                localStorage.setItem('familiar_token', this.token);
+
+                this.showMainUI();
+                this.setupEventListeners();
+                await this.checkStatus();
+                this.connectWebSockets();
+                setInterval(() => this.checkStatus(), 10000);
+            } else if (response.status === 401) {
+                errorDiv.textContent = 'Invalid PIN';
+            } else if (response.status === 429) {
+                errorDiv.textContent = 'Too many attempts. Please wait.';
+            } else {
+                errorDiv.textContent = 'Login failed. Please try again.';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            errorDiv.textContent = 'Connection error. Please try again.';
+        } finally {
+            loginBtn.disabled = false;
+            pinInput.value = '';
+        }
+    }
+
+    async validateToken() {
+        try {
+            const response = await fetch('/api/auth/validate', {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }
+
+    logout() {
+        this.token = null;
+        localStorage.removeItem('familiar_token');
+
+        // Close WebSocket connections
+        if (this.audioDownlinkWs) {
+            this.audioDownlinkWs.close();
+            this.audioDownlinkWs = null;
+        }
+        if (this.audioUplinkWs) {
+            this.audioUplinkWs.close();
+            this.audioUplinkWs = null;
+        }
+        if (this.videoWs) {
+            this.videoWs.close();
+            this.videoWs = null;
+        }
+
+        this.showLoginUI();
+    }
+
+    showLoginUI() {
+        document.getElementById('login-modal').style.display = 'flex';
+        document.getElementById('main-container').style.display = 'none';
+        document.getElementById('pin-input').focus();
+    }
+
+    showMainUI() {
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+    }
+
+    getAuthHeaders() {
+        return {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+        };
     }
 
     setupEventListeners() {
@@ -66,7 +184,15 @@ class FamiliarClient {
 
     async checkStatus() {
         try {
-            const response = await fetch('/api/status');
+            const response = await fetch('/api/status', {
+                headers: this.getAuthHeaders()
+            });
+
+            if (response.status === 401) {
+                this.logout();
+                return;
+            }
+
             const status = await response.json();
 
             document.getElementById('sys-uptime').textContent = this.formatUptime(status.uptimeSeconds);
@@ -77,7 +203,9 @@ class FamiliarClient {
                 status.cameraAvailable ? 'block' : 'none';
 
             // Meshtastic status
-            const meshResponse = await fetch('/api/meshtastic/status');
+            const meshResponse = await fetch('/api/meshtastic/status', {
+                headers: this.getAuthHeaders()
+            });
             const meshStatus = await meshResponse.json();
             document.getElementById('mesh-connected').textContent = meshStatus.connected ? 'Connected' : 'Disconnected';
             document.getElementById('mesh-nodes').textContent = meshStatus.nodeCount;
@@ -99,7 +227,9 @@ class FamiliarClient {
 
     connectAudioDownlink() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.audioDownlinkWs = new WebSocket(`${protocol}//${window.location.host}/ws/audio/down`);
+        this.audioDownlinkWs = new WebSocket(
+            `${protocol}//${window.location.host}/ws/audio/down?access_token=${encodeURIComponent(this.token)}`
+        );
 
         this.audioDownlinkWs.onopen = () => {
             console.log('Audio downlink connected');
@@ -112,7 +242,9 @@ class FamiliarClient {
             console.log('Audio downlink disconnected');
             this.updateConnectionStatus(false);
             document.getElementById('ptt-btn').disabled = true;
-            setTimeout(() => this.connectAudioDownlink(), 3000);
+            if (this.token) {
+                setTimeout(() => this.connectAudioDownlink(), 3000);
+            }
         };
 
         this.audioDownlinkWs.onerror = (error) => {
@@ -129,7 +261,9 @@ class FamiliarClient {
 
     connectAudioUplink() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.audioUplinkWs = new WebSocket(`${protocol}//${window.location.host}/ws/audio/up`);
+        this.audioUplinkWs = new WebSocket(
+            `${protocol}//${window.location.host}/ws/audio/up?access_token=${encodeURIComponent(this.token)}`
+        );
 
         this.audioUplinkWs.onopen = () => {
             console.log('Audio uplink connected');
@@ -138,7 +272,9 @@ class FamiliarClient {
 
         this.audioUplinkWs.onclose = () => {
             console.log('Audio uplink disconnected');
-            setTimeout(() => this.connectAudioUplink(), 3000);
+            if (this.token) {
+                setTimeout(() => this.connectAudioUplink(), 3000);
+            }
         };
 
         this.audioUplinkWs.onerror = (error) => {
@@ -301,9 +437,14 @@ class FamiliarClient {
         try {
             const response = await fetch('/api/tts/speak', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({ text })
             });
+
+            if (response.status === 401) {
+                this.logout();
+                return;
+            }
 
             if (response.ok) {
                 console.log('TTS message sent');
@@ -320,9 +461,14 @@ class FamiliarClient {
         try {
             const response = await fetch('/api/meshtastic/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({ text })
             });
+
+            if (response.status === 401) {
+                this.logout();
+                return;
+            }
 
             if (response.ok) {
                 console.log('Meshtastic message sent');
@@ -349,7 +495,9 @@ class FamiliarClient {
 
     connectVideoStream() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.videoWs = new WebSocket(`${protocol}//${window.location.host}/ws/video`);
+        this.videoWs = new WebSocket(
+            `${protocol}//${window.location.host}/ws/video?access_token=${encodeURIComponent(this.token)}`
+        );
 
         this.videoWs.onopen = () => {
             console.log('Video stream connected');
@@ -379,7 +527,15 @@ class FamiliarClient {
 
     async takeSnapshot() {
         try {
-            const response = await fetch('/api/camera/snapshot');
+            const response = await fetch('/api/camera/snapshot', {
+                headers: this.getAuthHeaders()
+            });
+
+            if (response.status === 401) {
+                this.logout();
+                return;
+            }
+
             if (response.ok) {
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
@@ -405,7 +561,16 @@ class FamiliarClient {
 
         if (this.isRecording) {
             try {
-                await fetch('/api/camera/recording/stop', { method: 'POST' });
+                const response = await fetch('/api/camera/recording/stop', {
+                    method: 'POST',
+                    headers: this.getAuthHeaders()
+                });
+
+                if (response.status === 401) {
+                    this.logout();
+                    return;
+                }
+
                 btn.textContent = 'Record';
                 btn.classList.remove('recording');
                 this.isRecording = false;
@@ -417,9 +582,14 @@ class FamiliarClient {
                 const filename = `recording_${Date.now()}.mp4`;
                 const response = await fetch('/api/camera/recording/start', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: this.getAuthHeaders(),
                     body: JSON.stringify({ filename })
                 });
+
+                if (response.status === 401) {
+                    this.logout();
+                    return;
+                }
 
                 if (response.ok) {
                     btn.textContent = 'Stop';

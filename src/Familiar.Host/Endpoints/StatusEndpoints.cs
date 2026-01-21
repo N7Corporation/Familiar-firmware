@@ -43,9 +43,12 @@ public static class StatusEndpoints
                 }
             });
         })
-        .WithName("GetStatus");
+        .WithName("GetStatus")
+        .RequireAuthorization()
+        .RequireRateLimiting("default");
 
         app.MapGet("/api/health", () => Results.Ok(new { Status = "Healthy" }))
-            .WithName("HealthCheck");
+            .WithName("HealthCheck")
+            .RequireRateLimiting("default");
     }
 }
