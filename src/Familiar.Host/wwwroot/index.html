@@ -7,10 +7,26 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Familiar Login</h2>
+            <p>Enter PIN to access the handler console</p>
+            <form id="login-form">
+                <input type="password" id="pin-input" placeholder="Enter PIN" maxlength="10" autocomplete="off" inputmode="numeric">
+                <button type="submit" id="login-btn">Login</button>
+                <div id="login-error" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="main-container" style="display: none;">
         <header>
             <h1>Familiar</h1>
-            <div id="connection-status" class="status disconnected">Disconnected</div>
+            <div class="header-controls">
+                <div id="connection-status" class="status disconnected">Disconnected</div>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
         </header>
 
         <main>

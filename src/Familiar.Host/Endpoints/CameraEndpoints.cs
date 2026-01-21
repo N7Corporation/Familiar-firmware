@@ -6,7 +6,9 @@ public static class CameraEndpoints
 {
     public static void MapCameraEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/camera");
+        var group = app.MapGroup("/api/camera")
+            .RequireAuthorization()
+            .RequireRateLimiting("default");
 
         group.MapGet("/status", (ICameraService camera) =>
         {

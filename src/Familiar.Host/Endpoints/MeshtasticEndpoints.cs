@@ -6,7 +6,9 @@ public static class MeshtasticEndpoints
 {
     public static void MapMeshtasticEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/meshtastic");
+        var group = app.MapGroup("/api/meshtastic")
+            .RequireAuthorization()
+            .RequireRateLimiting("default");
 
         group.MapGet("/status", (MeshtasticService service) =>
         {

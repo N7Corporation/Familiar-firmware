@@ -2,6 +2,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using Familiar.Audio;
+using Familiar.Host.Services;
 
 namespace Familiar.Host.WebSockets;
 
@@ -12,18 +13,29 @@ namespace Familiar.Host.WebSockets;
 public class AudioDownlinkHandler
 {
     private readonly IAudioManager _audioManager;
+    private readonly ITokenService _tokenService;
     private readonly ILogger<AudioDownlinkHandler> _logger;
 
     public AudioDownlinkHandler(
         IAudioManager audioManager,
+        ITokenService tokenService,
         ILogger<AudioDownlinkHandler> logger)
     {
         _audioManager = audioManager;
+        _tokenService = tokenService;
         _logger = logger;
     }
 
     public async Task HandleAsync(HttpContext context)
     {
+        // Validate token from query string
+        if (!context.Request.Query.TryGetValue("access_token", out var token) ||
+            !_tokenService.ValidateToken(token!))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+
         using var ws = await context.WebSockets.AcceptWebSocketAsync();
         var buffer = new byte[8192];
 

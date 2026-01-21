@@ -6,7 +6,9 @@ public static class AudioEndpoints
 {
     public static void MapAudioEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/audio");
+        var group = app.MapGroup("/api/audio")
+            .RequireAuthorization()
+            .RequireRateLimiting("default");
 
         group.MapGet("/status", (IAudioManager audio) =>
         {
