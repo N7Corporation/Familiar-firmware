@@ -34,7 +34,7 @@ dotnet publish src/Familiar.Host -c Release -o /opt/familiar
 
 - **Familiar.Host** - ASP.NET Core web server (port 8080), entry point in `Program.cs`
 - **Familiar.Audio** - ALSA audio playback/capture, Voice Activity Detection (VAD)
-- **Familiar.Tts** - Text-to-speech via espeak-ng subprocess
+- **Familiar.Tts** - Text-to-speech via espeak subprocess
 - **Familiar.Meshtastic** - LoRa mesh networking with protobuf protocol over serial
 - **Familiar.Camera** - Pi Camera Module 3 support (Pi 5 only)
 

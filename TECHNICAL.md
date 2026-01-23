@@ -1110,7 +1110,7 @@ talkBtn.addEventListener('touchend', () => client.stopTalking());
   "Kestrel": {
     "Endpoints": {
       "Http": {
-        "Url": "http://0.0.0.0:80"
+        "Url": "http://0.0.0.0:8080"
       },
       "Https": {
         "Url": "https://0.0.0.0:443",
@@ -1349,7 +1349,7 @@ Restart=always
 RestartSec=10
 User=familiar
 Environment=DOTNET_ENVIRONMENT=Production
-Environment=ASPNETCORE_URLS=http://0.0.0.0:80;https://0.0.0.0:443
+Environment=ASPNETCORE_URLS=http://0.0.0.0:8080;https://0.0.0.0:443
 
 [Install]
 WantedBy=multi-user.target

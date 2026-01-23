@@ -4,7 +4,7 @@ A Raspberry Pi-based communication system for cosplay handlers to communicate wi
 
 ## Overview
 
-Familiar Firmware enables seamless one-way audio communication from a handler's phone to a speaker/earpiece worn by a cosplayer. This is particularly useful for:
+Familiar Firmware enables seamless two-way audio communication between cosplay handlers (via phone) and cosplayers (via Pi device). This is particularly useful for:
 
 - Guiding cosplayers through crowded convention spaces
 - Providing cues during performances or photo ops
@@ -101,11 +101,11 @@ dotnet run --project src/Familiar.Host
 ```
 familiar-firmware/
 ├── src/
-│   ├── Familiar.Host/         # Main application host
+│   ├── Familiar.Host/         # Main application host (includes web interface)
 │   ├── Familiar.Audio/        # Audio processing and playback
-│   ├── Familiar.Web/          # Web interface and API
 │   ├── Familiar.Meshtastic/   # Meshtastic integration
-│   └── Familiar.Tts/          # Text-to-speech engine
+│   ├── Familiar.Tts/          # Text-to-speech engine
+│   └── Familiar.Camera/       # Camera support (Pi 5 only)
 ├── web/                       # Frontend assets (HTML/JS/CSS)
 ├── config/                    # Configuration files
 ├── scripts/                   # Setup and utility scripts
@@ -115,7 +115,7 @@ familiar-firmware/
 
 ## Configuration
 
-Edit `config/appsettings.json` to customize:
+Edit `src/Familiar.Host/appsettings.json` to customize:
 
 ```json
 {
