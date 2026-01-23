@@ -111,10 +111,10 @@
 - [ ] Add Polly for retry policies
 
 ### Milestone 4.2: Security
-- [ ] Add JWT authentication to web interface
+- [x] Add JWT authentication to web interface
 - [ ] Implement HTTPS with Kestrel
 - [ ] Secure Meshtastic channel encryption
-- [ ] Add rate limiting middleware
+- [x] Add rate limiting middleware
 - [ ] Security audit
 
 ### Milestone 4.3: User Experience
