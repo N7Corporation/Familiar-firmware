@@ -1,0 +1,440 @@
+                              n7co Open License
+                          Version 1.0, January 2026
+
+   Based on the Apache License, Version 2.0
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 17 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Commercial Sale Notification Requirement.
+
+      Prior to the commercial sale, distribution for a fee, or any form of
+      monetization of any Derivative Work based on this Work, You must notify
+      the original creator(s) of the Work (whether individual(s) or company)
+      in writing. Such notification must include:
+
+      (a) A description of the Derivative Work and its intended use;
+      (b) The anticipated date of commercial release or sale;
+      (c) Contact information for the party intending to commercialize
+          the Derivative Work.
+
+      Notification must be sent via one of the following methods:
+
+      (a) Postal mail to the physical address specified by the copyright
+          holder(s) in the NOTICE file or other documentation;
+      (b) Email to the email address specified by the copyright holder(s)
+          in the NOTICE file or other documentation;
+      (c) Any other communication method explicitly authorized in writing
+          by the copyright holder(s).
+
+      If no contact information is provided in the NOTICE file or other
+      documentation accompanying the Work, You must make reasonable efforts
+      to contact the copyright holder(s) identified in the Work using
+      publicly available contact information. Notification is not considered
+      complete until confirmation of receipt is obtained from the copyright
+      holder(s), or until 30 days have passed since sending via postal mail
+      with proof of mailing (such as certified mail or equivalent).
+
+      This notification requirement is for informational purposes only and
+      does not require approval, consent, or any response from the original
+      creator(s). Failure to provide such notification prior to commercial
+      sale constitutes a breach of this License.
+
+      For the purposes of this section, "commercial sale" includes but is
+      not limited to: selling copies of the Derivative Work, offering the
+      Derivative Work as a paid service, including the Derivative Work in
+      a product or service sold for profit, or any other arrangement where
+      monetary compensation is received in exchange for access to or use of
+      the Derivative Work.
+
+   7. Prohibition of Illicit Use.
+
+      The Work and any Derivative Works may not be used for any unlawful,
+      illegal, or illicit purpose. You agree not to use the Work or any
+      Derivative Work:
+
+      (a) In violation of any applicable local, state, national, or
+          international law, statute, regulation, or ordinance;
+      (b) To promote, facilitate, or engage in any criminal activity;
+      (c) To infringe upon the rights of others, including but not limited
+          to intellectual property rights, privacy rights, or contractual
+          rights;
+      (d) To harass, abuse, threaten, or harm any individual or group;
+      (e) To distribute malware, viruses, or other malicious code;
+      (f) To engage in fraud, money laundering, terrorist financing, or
+          other financial crimes;
+      (g) To circumvent sanctions or export control laws;
+      (h) For any purpose that would bring the Licensor or Contributors
+          into disrepute or associate them with illegal activities.
+
+      Any use of the Work or Derivative Works in violation of this section
+      shall immediately and automatically terminate all rights granted
+      under this License. The Licensor reserves the right to pursue any
+      and all legal remedies against parties who use the Work or Derivative
+      Works for illicit purposes.
+
+   8. AI and Machine Learning Training Prohibition.
+
+      Unless expressly authorized in writing by the Licensor, You may not
+      use the Work or any Derivative Works, in whole or in part, to:
+
+      (a) Train, develop, or improve any artificial intelligence, machine
+          learning, deep learning, or neural network model or system;
+      (b) Create training datasets, corpora, or data collections for use
+          in machine learning or AI development;
+      (c) Fine-tune, adapt, or otherwise modify pre-existing AI or ML
+          models using the Work;
+      (d) Generate synthetic data based on patterns learned from the Work;
+      (e) Build or enhance any automated content generation system,
+          including but not limited to large language models, image
+          generators, or code synthesis tools.
+
+      This restriction applies regardless of whether the AI/ML training
+      is performed directly by You or by a third party on Your behalf.
+      Any authorization for AI/ML use must be obtained separately in
+      writing from the Licensor and may be subject to additional terms
+      and fees.
+
+   9. Ethical Use Requirements.
+
+      You agree to use the Work and any Derivative Works only in a manner
+      that is ethical and socially responsible. Without limiting the
+      generality of the foregoing, You shall not use the Work or any
+      Derivative Work:
+
+      (a) In any manner that causes or contributes to environmental
+          degradation, pollution, or destruction of natural habitats;
+      (b) To facilitate or enable human rights violations, including but
+          not limited to forced labor, human trafficking, or suppression
+          of free speech;
+      (c) For mass surveillance, unauthorized tracking, or monitoring of
+          individuals without their informed consent;
+      (d) To develop or deploy autonomous weapons systems or other
+          technologies designed to harm human life without meaningful
+          human control;
+      (e) To discriminate against individuals or groups based on race,
+          ethnicity, gender, religion, sexual orientation, disability,
+          or other protected characteristics;
+      (f) To spread disinformation, propaganda, or deliberately misleading
+          content;
+      (g) To exploit or endanger children in any way.
+
+      The Licensor reserves the right to terminate this License immediately
+      upon discovery of any use that violates these ethical requirements.
+
+   10. Enhanced Attribution Requirements.
+
+      In addition to any attribution requirements set forth elsewhere in
+      this License, You must provide clear and conspicuous attribution
+      to the original creator(s) in the following manner:
+
+      (a) Source Code: All source files must retain the original copyright
+          notice and include a reference to this License;
+      (b) Documentation: Any user-facing documentation, README files, or
+          help materials must include an acknowledgment of the original
+          Work and its creator(s);
+      (c) User Interface: If the Derivative Work includes a graphical user
+          interface, an "About" section, credits screen, or similar feature
+          must acknowledge the original Work and its creator(s);
+      (d) Marketing Materials: Any marketing materials, websites, or
+          promotional content for the Derivative Work must include an
+          acknowledgment of the original Work, unless explicitly waived
+          in writing by the Licensor;
+      (e) Academic or Research Use: Any academic papers, research
+          publications, or presentations that utilize or reference the
+          Work must include appropriate citation.
+
+      Attribution must include, at minimum: the name of the original Work,
+      the name(s) of the original creator(s), and a link to the original
+      source repository or website (if available).
+
+   11. Non-Endorsement.
+
+      Nothing in this License shall be construed as granting You any right
+      to claim or imply that:
+
+      (a) The Licensor or any Contributor endorses You, Your organization,
+          or Your products or services;
+      (b) The Licensor or any Contributor is affiliated with or sponsors
+          Your activities;
+      (c) Your Derivative Work is an official version or is approved,
+          certified, or sanctioned by the Licensor;
+      (d) The Licensor or any Contributor has reviewed, tested, or verified
+          the quality, safety, or suitability of Your Derivative Work.
+
+      You must include a prominent disclaimer in any Derivative Work
+      stating that it is not endorsed by, affiliated with, or sponsored
+      by the original creator(s) of the Work, unless You have obtained
+      explicit written permission to state otherwise.
+
+   12. NO TRADEMARK RIGHTS GRANTED.
+
+      THIS LICENSE EXPLICITLY DOES NOT GRANT ANY RIGHTS TO USE THE TRADE
+      NAMES, TRADEMARKS, SERVICE MARKS, LOGOS, OR PRODUCT NAMES OF THE
+      LICENSOR OR ANY CONTRIBUTOR. No implied license or right is granted
+      under this License to use any trademark, trade name, service mark,
+      or logo of the Licensor or any Contributor, whether by estoppel,
+      implication, or otherwise.
+
+      You may not use any trademarks, trade names, service marks, logos,
+      or product names of the Licensor or any Contributor:
+      (a) to endorse or promote products derived from the Work;
+      (b) in any manner that suggests the Licensor or any Contributor
+          endorses You or Your use of the Work;
+      (c) in any manner that might cause confusion about the source or
+          origin of the Work or Derivative Works;
+      (d) in any commercial advertising, promotional materials, or
+          product packaging without prior written permission.
+
+      The only permitted use of the Licensor's name is as required for
+      reasonable and customary use in describing the origin of the Work
+      and reproducing the content of the NOTICE file, if any.
+
+   13. NO WARRANTY.
+
+      THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+      OR IMPLIED. THIS LICENSE EXPLICITLY DISCLAIMS ALL WARRANTIES,
+      INCLUDING BUT NOT LIMITED TO:
+
+      (a) WARRANTIES OF MERCHANTABILITY;
+      (b) WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE;
+      (c) WARRANTIES OF TITLE;
+      (d) WARRANTIES OF NON-INFRINGEMENT;
+      (e) WARRANTIES THAT THE WORK WILL BE ERROR-FREE, UNINTERRUPTED,
+          OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS;
+      (f) WARRANTIES ARISING FROM COURSE OF DEALING, USAGE, OR TRADE
+          PRACTICE.
+
+      THE LICENSOR AND ALL CONTRIBUTORS MAKE NO REPRESENTATIONS OR
+      WARRANTIES REGARDING THE ACCURACY, COMPLETENESS, SECURITY, OR
+      SUITABILITY OF THE WORK FOR ANY PURPOSE. YOU ASSUME THE ENTIRE
+      RISK AS TO THE QUALITY AND PERFORMANCE OF THE WORK.
+
+      You are solely responsible for determining the appropriateness of
+      using or redistributing the Work and assume any and all risks
+      associated with Your exercise of permissions under this License.
+
+   14. Limitation of Liability. IN NO EVENT AND UNDER NO LEGAL THEORY,
+      WHETHER IN TORT (INCLUDING NEGLIGENCE), CONTRACT, OR OTHERWISE,
+      UNLESS REQUIRED BY APPLICABLE LAW (SUCH AS DELIBERATE AND GROSSLY
+      NEGLIGENT ACTS) OR AGREED TO IN WRITING, SHALL ANY CONTRIBUTOR BE
+      LIABLE TO YOU FOR DAMAGES, INCLUDING ANY DIRECT, INDIRECT, SPECIAL,
+      INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY CHARACTER ARISING AS A
+      RESULT OF THIS LICENSE OR OUT OF THE USE OR INABILITY TO USE THE
+      WORK (INCLUDING BUT NOT LIMITED TO DAMAGES FOR LOSS OF GOODWILL,
+      WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION, OR ANY AND ALL
+      OTHER COMMERCIAL DAMAGES OR LOSSES), EVEN IF SUCH CONTRIBUTOR
+      HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+   15. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   16. Indemnification.
+
+      You agree to indemnify, defend, and hold harmless the Licensor and
+      all Contributors, and their respective officers, directors, employees,
+      agents, successors, and assigns (collectively, the "Indemnified Parties")
+      from and against any and all claims, damages, losses, liabilities,
+      costs, and expenses (including reasonable attorneys' fees and court
+      costs) arising out of or relating to:
+
+      (a) Your use of the Work or any Derivative Work;
+      (b) Any Derivative Work You create, distribute, or make available;
+      (c) Your violation of any term or condition of this License;
+      (d) Your violation of any applicable law, regulation, or third-party
+          right (including intellectual property rights and privacy rights);
+      (e) Any claim that Your Derivative Work infringes or misappropriates
+          any patent, copyright, trademark, trade secret, or other
+          intellectual property right of any third party;
+      (f) Any claim arising from end users or customers of Your products
+          or services that incorporate the Work or Derivative Works.
+
+      This indemnification obligation shall survive the termination or
+      expiration of this License and shall apply regardless of the form
+      of action, whether in contract, tort, strict liability, or otherwise.
+
+      The Indemnified Parties reserve the right, at Your expense, to assume
+      the exclusive defense and control of any matter for which You are
+      required to indemnify them, and You agree to cooperate with the
+      defense of such claims. You shall not settle any claim without the
+      prior written consent of the affected Indemnified Parties.
+
+   17. No Waiver.
+
+      The failure of the Licensor or any Contributor to enforce any
+      provision of this License shall not constitute a waiver of such
+      provision or the right to enforce it at a later time. No waiver
+      of any term or condition of this License shall be effective unless
+      made in writing and signed by the party against whom the waiver
+      is sought to be enforced.
+
+      Any waiver of a breach of any provision of this License shall not
+      be construed as a waiver of any subsequent breach of the same or
+      any other provision. The rights and remedies provided in this
+      License are cumulative and not exclusive of any rights or remedies
+      provided by law.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the n7co Open License to your work.
+
+      To apply the n7co Open License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright 2026 N7co
+
+   Licensed under the n7co Open License, Version 1.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       [URL where license can be found]
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
