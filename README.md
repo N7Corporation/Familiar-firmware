@@ -146,7 +146,7 @@ Edit `src/Familiar.Host/appsettings.json` to customize:
 
 ## License
 
-MIT License - See LICENSE file for details.
+N7co open License - See LICENSE file for details.
 
 ## Contributing
 
